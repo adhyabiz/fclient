@@ -1,167 +1,73 @@
-package com.amansingh.foxfire.directionhelper;
-
-import android.content.Context;
-import android.graphics.Color;
-import android.os.AsyncTask;
-import android.util.Log;
-
-import com.google.android.gms.maps.model.LatLng;
-
-import com.google.android.gms.maps.model.PolylineOptions;
-
-
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
-
-    TaskLoadedCallback taskCallback;
-
-    String directionMode = "driving";
-
-
-
-    public PointsParser(Context mContext, String directionMode) {
-
-        this.taskCallback = (TaskLoadedCallback) mContext;
-
-        this.directionMode = directionMode;
-
-    }
-
-
-
-    // Parsing the data in non-ui thread
-
-    @Override
-
-    protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
-
-
-
-        JSONObject jObject;
-
-        List<List<HashMap<String, String>>> routes = null;
-
-
-
-        try {
-
-            jObject = new JSONObject(jsonData[0]);
-
-            Log.d("mylog", jsonData[0].toString());
-
-            DataParser parser = new DataParser();
-
-            Log.d("mylog", parser.toString());
-
-
-
-            // Starts parsing data
-
-            routes = parser.parse(jObject);
-
-            Log.d("mylog", "Executing routes");
-
-            Log.d("mylog", routes.toString());
-
-
-
-        } catch (Exception e) {
-
-            Log.d("mylog", e.toString());
-
-            e.printStackTrace();
-
-        }
-
-        return routes;
-
-    }
-
-
-
-    // Executes in UI thread, after the parsing process
-
-    @Override
-
-    protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-
-        ArrayList<LatLng> points;
-
-        PolylineOptions lineOptions = null;
-
-        // Traversing through all the routes
-
-        for (int i = 0; i < result.size(); i++) {
-
-            points = new ArrayList<>();
-
-            lineOptions = new PolylineOptions();
-
-            // Fetching i-th route
-
-            List<HashMap<String, String>> path = result.get(i);
-
-            // Fetching all the points in i-th route
-
-            for (int j = 0; j < path.size(); j++) {
-
-                HashMap<String, String> point = path.get(j);
-
-                double lat = Double.parseDouble(point.get("lat"));
-
-                double lng = Double.parseDouble(point.get("lng"));
-
-                LatLng position = new LatLng(lat, lng);
-
-                points.add(position);
-
-            }
-
-            // Adding all the points in the route to LineOptions
-
-            lineOptions.addAll(points);
-
-            if (directionMode.equalsIgnoreCase("walking")) {
-
-                lineOptions.width(10);
-
-                lineOptions.color(Color.MAGENTA);
-
-            } else {
-
-                lineOptions.width(20);
-
-                lineOptions.color(Color.BLUE);
-
-            }
-
-            Log.d("mylog", "onPostExecute lineoptions decoded");
-
-        }
-
-
-
-        // Drawing polyline in the Google Map for the i-th route
-
-        if (lineOptions != null) {
-
-            //mMap.addPolyline(lineOptions);
-
-            taskCallback.onTaskDone(lineOptions);
-
-
-
-        } else {
-
-            Log.d("mylog", "without Polylines drawn");
-
-        }
-
-    }
-
-}
+//package com.amansingh.foxfire;
+//
+//import android.Manifest;
+//import android.content.pm.PackageManager;
+//import android.support.annotation.NonNull;
+//import android.support.v4.app.ActivityCompat;
+//import android.support.v4.app.FragmentActivity;
+//import android.os.Bundle;
+//
+//import com.google.android.gms.maps.CameraUpdateFactory;
+//import com.google.android.gms.maps.GoogleMap;
+//import com.google.android.gms.maps.OnMapReadyCallback;
+//import com.google.android.gms.maps.SupportMapFragment;
+//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+//import com.google.android.gms.maps.model.LatLng;
+//import com.google.android.gms.maps.model.MarkerOptions;
+//
+//import java.io.InputStream;
+//import java.net.HttpURLConnection;
+//import java.net.URL;
+//import java.util.ArrayList;
+//
+//public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback {
+//
+//    private GoogleMap mMap;
+//    private static final int LOCATION_REQUEST = 500;
+//    ArrayList<LatLng>listPoints;
+//
+//    @Override
+//    protected void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        setContentView(R.layout.activity_maps2);
+//        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+//        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+//                .findFragmentById(com.amansingh.foxfire.R.id.map);
+//        mapFragment.getMapAsync(this);
+//        listPoints=new ArrayList<>();
+//    }
+//
+//
+//    /**
+//     * Manipulates the map once available.
+//     * This callback is triggered when the map is ready to be used.
+//     * This is where we can add markers or lines, add listeners or move the camera. In this case,
+//     * we just add a marker near Sydney, Australia.
+//     * If Google Play services is not installed on the device, the user will be prompted to install
+//     * it inside the SupportMapFragment. This method will only be triggered once the user has
+//     * installed Google Play services and returned to the app.
+//     */
+//    @Override
+//    public void onMapReady(GoogleMap googleMap) {
+//        mMap = googleMap;
+//        mMap.getUiSettings().setZoomControlsEnabled(true);
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST);
+//            return;
+//        }
+//        mMap.setMyLocationEnabled(true);
+//        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+//            @Override
+//            public void onMapLongClick(LatLng latLng) {
+//                if (listPoints.size()==2){
+//                    listPoints.clear();
+//                    mMap.clear();
+//                }
+//                listPoints.add(latLng);
+//                MarkerOptions markerOptions=new MarkerOptions();
+//                markerOptions.position(latLng);
+//                if (listPoints.size()==1){
+//                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+////                }
+////                else {
+////                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED
