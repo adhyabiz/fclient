@@ -19,18 +19,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
-                android:id="@+id/appLockET"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/changePassTV"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="32dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="32dp"
-                android:hint="@string/your_passcode"
-                android:inputType="number"
+                android:gravity="center"
+                android:text="@string/your_passcode"
                 android:textAlignment="center"
                 android:textColor="@color/colorAccent"
-                android:textColorHint="@color/colorAccent"
                 android:textSize="26sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -43,7 +42,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/_2"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:padding="4dp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/oneTV" />
@@ -55,6 +55,7 @@
                 android:text="@string/_3"
                 android:textColor="@color/colorAccent"
                 android:textSize="36sp"
+                android:padding="4dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/twoTV"
                 app:layout_constraintTop_toTopOf="@+id/twoTV" />
@@ -64,20 +65,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:padding="4dp"
                 android:text="@string/_1"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toStartOf="@+id/twoTV"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/appLockET" />
+                app:layout_constraintTop_toBottomOf="@+id/changePassTV" />
 
             <TextView
                 android:id="@+id/fiveTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="@string/_5"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/fourTV" />
@@ -87,9 +90,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:padding="4dp"
                 android:text="@string/_4"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toStartOf="@+id/fiveTV"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/twoTV" />
@@ -98,9 +102,10 @@
                 android:id="@+id/sixTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="@string/_6"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/fiveTV"
                 app:layout_constraintTop_toTopOf="@+id/fiveTV" />
@@ -109,6 +114,7 @@
                 android:id="@+id/eightTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="@string/_8"
                 android:textColor="@color/colorAccent"
                 android:textSize="36sp"
@@ -121,9 +127,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:padding="4dp"
                 android:text="@string/_7"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toStartOf="@+id/eightTV"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/fiveTV" />
@@ -132,9 +139,10 @@
                 android:id="@+id/nineTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="@string/_9"
                 android:textColor="@color/colorAccent"
-                android:textSize="35sp"
+                android:textSize="36sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/eightTV"
                 app:layout_constraintTop_toTopOf="@+id/eightTV" />
@@ -145,6 +153,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
+                android:padding="4dp"
                 android:text="@string/_0"
                 android:textColor="@color/colorAccent"
                 android:textSize="36sp"
@@ -154,7 +163,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/eightTV" />
 
             <Button
-                android:id="@+id/okBtn"
+                android:id="@+id/changePassBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"

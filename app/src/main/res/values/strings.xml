@@ -22,4 +22,7 @@
     <string name="_1">1</string>
     <string name="_3">3</string>
     <string name="_2">2</string>
+    <string name="change_password">Change Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="log_out">Log out</string>
 </resources>

@@ -67,6 +67,8 @@ public class MainActivity extends FragmentActivity
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
 
+        searchET.setVisibility(View.GONE);
+
         searchET.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);

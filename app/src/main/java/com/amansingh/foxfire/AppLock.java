@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,10 +18,6 @@ import butterknife.OnClick;
 
 public class AppLock extends AppCompatActivity {
 
-
-    private final String TAG = "AppLock";
-    @BindView(R.id.appLockET)
-    EditText appLockET;
     @BindView(R.id.twoTV)
     TextView twoTV;
     @BindView(R.id.threeTV)
@@ -43,11 +38,15 @@ public class AppLock extends AppCompatActivity {
     TextView nineTV;
     @BindView(R.id.zeroTV)
     TextView zeroTV;
-    @BindView(R.id.okBtn)
-    Button okBtn;
+    private final String TAG = "AppLock";
     @BindView(R.id.backBtn)
     Button backBtn;
+    @BindView(R.id.changePassBtn)
+    Button okBtn;
+
     private String passCode;
+    @BindView(R.id.changePassTV)
+    TextView changePassTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,39 +58,39 @@ public class AppLock extends AppCompatActivity {
         passCode = pref.getString("passcode", null);  // getting passCode
         Log.e(TAG, "onCreate: passCode in lockActivity " + passCode);
 
-        appLockET.setEnabled(false);
+        changePassTV.setEnabled(false);
     }
 
     private void setChar(String c) {
         String s = "";
-        if (appLockETMax()) {
-            s += appLockET.getText().toString();
+        if (changePassTVMax()) {
+            s += changePassTV.getText().toString();
             s += c;
-            appLockET.setText(s);
+            changePassTV.setText(s);
         } else {
             Utils.showMessage(this, "Your code is of 4 digits");
         }
     }
 
-    private boolean appLockETMax() {
-        return appLockET.getText().toString().length() <= 4;
+    private boolean changePassTVMax() {
+        return changePassTV.getText().toString().length() <= 4;
     }
 
-    private boolean appLockETCheck() {
-        return !appLockET.getText().toString().isEmpty();
+    private boolean changePassTVCheck() {
+        return !changePassTV.getText().toString().isEmpty();
     }
 
     private void clearText() {
-        String s = appLockET.getText().toString();
+        String s = changePassTV.getText().toString();
         if (s.length() > 0) {
             s = s.substring(0, (s.length() - 1));
         }
-        appLockET.setText(s);
+        changePassTV.setText(s);
     }
 
     private void submit() {
-        if (appLockETCheck()) {
-            if (appLockET.getText().toString().equals(passCode))
+        if (changePassTVCheck()) {
+            if (changePassTV.getText().toString().equals(passCode))
                 Utils.setIntent(this, SettingsActivity.class);
             else
                 Toast.makeText(this, "Pass Code not matched with server", Toast.LENGTH_SHORT).show();
@@ -100,7 +99,7 @@ public class AppLock extends AppCompatActivity {
         }
     }
 
-    @OnClick({R.id.twoTV, R.id.threeTV, R.id.oneTV, R.id.fiveTV, R.id.fourTV, R.id.sixTV, R.id.eightTV, R.id.sevenTV, R.id.nineTV, R.id.zeroTV, R.id.okBtn, R.id.backBtn})
+    @OnClick({R.id.twoTV, R.id.threeTV, R.id.oneTV, R.id.fiveTV, R.id.fourTV, R.id.sixTV, R.id.eightTV, R.id.sevenTV, R.id.nineTV, R.id.zeroTV, R.id.changePassBtn, R.id.backBtn})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.twoTV:
@@ -133,7 +132,7 @@ public class AppLock extends AppCompatActivity {
             case R.id.zeroTV:
                 setChar("0");
                 break;
-            case R.id.okBtn:
+            case R.id.changePassBtn:
                 submit();
                 break;
             case R.id.backBtn:

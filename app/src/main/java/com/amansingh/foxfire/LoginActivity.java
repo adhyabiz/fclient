@@ -37,7 +37,7 @@ public class LoginActivity extends AppCompatActivity {
     TextInputLayout userIdLayout;
     @BindView(R.id.userPassLayout)
     TextInputLayout userPassLayout;
-    @BindView(R.id.okBtn)
+    @BindView(R.id.changePassBtn)
     Button button;
     private String uid, pass;
     private String deviceIMEI = "";
@@ -59,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
 
         deviceIMEI = telephonyManager.getDeviceId();
 
-        //checkLogin();
+        checkLogin();
     }
 
     private void checkLogin() {
@@ -107,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    @OnClick(R.id.okBtn)
+    @OnClick(R.id.changePassBtn)
     public void onViewClicked() {
         Utils.showMessage(LoginActivity.this, "Please Wait....");
         if (checkFields()) {

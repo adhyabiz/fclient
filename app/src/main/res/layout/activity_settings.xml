@@ -4,42 +4,68 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     tools:context=".SettingsActivity">
+
     <EditText
+        android:id="@+id/changePassTV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/appLockET"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="50dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:hint="Change Password"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="42dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/change_password"
         android:inputType="textPassword"
-        android:textSize="25sp"/>
+        android:textColor="@color/colorAccent"
+        android:textColorHint="@color/colorAccent"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="Autofill" />
+
     <EditText
+        android:id="@+id/confirmPassET"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/editText1"
-        app:layout_constraintTop_toBottomOf="@+id/appLockET"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginLeft="10dp"
-        android:hint="Conf Password"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/confirm_password"
+        android:inputType="textPassword"
+        android:textColor="@color/colorAccent"
+        android:textColorHint="@color/colorAccent"
         android:textSize="25sp"
-        android:inputType="textPassword"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/changePassTV"
+        tools:ignore="Autofill" />
+
     <Button
+        android:id="@+id/changePassBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/okBtn"
-        app:layout_constraintTop_toBottomOf="@+id/editText1"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/button_bg"
+        android:padding="10dp"
+        android:text="@string/change_password"
+        android:textSize="26sp"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="40dp"
-        android:text="change"
-        android:textSize="25sp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/confirmPassET" />
+
+    <Button
+        android:id="@+id/logOutBtn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_bg"
+        android:padding="10dp"
+        android:text="@string/log_out"
+        android:textSize="26sp"
+        app:layout_constraintEnd_toEndOf="@+id/changePassBtn"
+        app:layout_constraintStart_toStartOf="@+id/changePassBtn"
+        app:layout_constraintTop_toBottomOf="@+id/changePassBtn" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
