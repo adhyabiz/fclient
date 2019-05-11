@@ -63,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void checkLogin() {
-        boolean userFirstLogin = pref.getBoolean("login", true);  // getting boolean
+        boolean userFirstLogin = pref.getBoolean("login", false);  // getting boolean
         if (userFirstLogin)
             Utils.setIntent(this, MainActivity.class);
         Log.e(TAG, "checkLogin: login found in pref " + userFirstLogin);
@@ -92,8 +92,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString("passcode", passCode);
                         editor.apply();
                         Utils.setIntent(LoginActivity.this, MainActivity.class);
-                    }
-                    else
+                    } else
                         Utils.showMessage(LoginActivity.this, "Device does not match with user");
                 } else
                     Utils.showMessage(LoginActivity.this, "Password not correct");

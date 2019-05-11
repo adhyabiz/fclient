@@ -11,10 +11,16 @@ import androidx.annotation.NonNull;
 public class Utils<Data> {
     @NonNull
     public static Intent setIntent(@NonNull Context context, Class destination) {
-
         Intent intent = new Intent(context, destination);
         context.startActivity(intent);
+        return intent;
+    }
 
+    @NonNull
+    public static Intent setIntentFinish(@NonNull Context context, Class destination) {
+        Intent intent = new Intent(context, destination);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
         return intent;
     }
 
@@ -23,7 +29,6 @@ public class Utils<Data> {
         Intent intent = new Intent(context, destination);
         intent.putExtra(key, data);
         context.startActivity(intent);
-
         return intent;
     }
 

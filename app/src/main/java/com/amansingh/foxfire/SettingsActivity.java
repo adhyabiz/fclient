@@ -2,18 +2,21 @@ package com.amansingh.foxfire;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.amansingh.foxfire.Utils.Utils;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class SettingsActivity extends AppCompatActivity {
-    @BindView(R.id.changePassTV)
+    @BindView(R.id.passCodeTV)
     EditText changePassET;
     @BindView(R.id.confirmPassET)
     EditText confirmPassET;
@@ -54,5 +57,7 @@ public class SettingsActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = pref.edit();
         editor.clear();
         editor.apply();
+        Log.e("SettingsActivity", "logOut: ");
+        Utils.setIntentFinish(this, LoginActivity.class);
     }
 }

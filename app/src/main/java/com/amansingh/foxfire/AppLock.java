@@ -43,10 +43,10 @@ public class AppLock extends AppCompatActivity {
     Button backBtn;
     @BindView(R.id.changePassBtn)
     Button okBtn;
+    @BindView(R.id.passCodeTV)
+    TextView passCodeTV;
 
     private String passCode;
-    @BindView(R.id.changePassTV)
-    TextView changePassTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,39 +58,42 @@ public class AppLock extends AppCompatActivity {
         passCode = pref.getString("passcode", null);  // getting passCode
         Log.e(TAG, "onCreate: passCode in lockActivity " + passCode);
 
-        changePassTV.setEnabled(false);
+        passCodeTV.setEnabled(false);
     }
 
     private void setChar(String c) {
         String s = "";
+        if (passCodeTV.getText().equals(getResources().getString(R.string.your_passcode)))
+            passCodeTV.setText("");
+
         if (changePassTVMax()) {
-            s += changePassTV.getText().toString();
+            s += passCodeTV.getText();
             s += c;
-            changePassTV.setText(s);
+            passCodeTV.setText(s);
         } else {
-            Utils.showMessage(this, "Your code is of 4 digits");
+
         }
     }
 
     private boolean changePassTVMax() {
-        return changePassTV.getText().toString().length() <= 4;
+        return passCodeTV.getText().length() <= 4 || passCodeTV.getText().equals(getResources().getString(R.string.your_passcode));
     }
 
     private boolean changePassTVCheck() {
-        return !changePassTV.getText().toString().isEmpty();
+        return !passCodeTV.getText().toString().isEmpty();
     }
 
     private void clearText() {
-        String s = changePassTV.getText().toString();
+        String s = passCodeTV.getText().toString();
         if (s.length() > 0) {
             s = s.substring(0, (s.length() - 1));
         }
-        changePassTV.setText(s);
+        passCodeTV.setText(s);
     }
 
     private void submit() {
         if (changePassTVCheck()) {
-            if (changePassTV.getText().toString().equals(passCode))
+            if (passCodeTV.getText().toString().equals(passCode))
                 Utils.setIntent(this, SettingsActivity.class);
             else
                 Toast.makeText(this, "Pass Code not matched with server", Toast.LENGTH_SHORT).show();
