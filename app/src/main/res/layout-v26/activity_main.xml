@@ -29,7 +29,6 @@
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/map_settings_cardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
@@ -119,11 +118,9 @@
                 android:ems="10"
                 android:hint="@string/where_do_you_want_to_go"
                 android:inputType="textPersonName"
-                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="@+id/searchTV"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/searchTV"
-                tools:ignore="Autofill" />
+                app:layout_constraintTop_toTopOf="@+id/searchTV" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>

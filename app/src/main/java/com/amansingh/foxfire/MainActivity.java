@@ -5,6 +5,10 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -14,6 +18,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.amansingh.foxfire.Utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -27,7 +32,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends FragmentActivity
         implements OnMapReadyCallback,
@@ -36,6 +43,15 @@ public class MainActivity extends FragmentActivity
         LocationListener {
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    @BindView(R.id.map_speedTV)
+    TextView mapSpeedTV;
+    @BindView(R.id.searchImageView)
+    ImageView searchImageView;
+    @BindView(R.id.searchTV)
+    TextView searchTV;
+    @BindView(R.id.searchET)
+    EditText searchET;
+
     private GoogleMap map;
     private GoogleApiClient mGoogleApiClient;
     private Marker mCurrLocationMarker;
@@ -50,6 +66,23 @@ public class MainActivity extends FragmentActivity
                 .findFragmentById(R.id.main_map_frag);
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
+
+        searchET.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus)
+                searchET.setVisibility(View.GONE);
+        });
+    }
+
+    private void search() {
+
+    }
+
+    private void settings() {
+        Utils.setIntent(this, AppLock.class);
+    }
+
+    private void showSearchET() {
+        searchET.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -193,6 +226,27 @@ public class MainActivity extends FragmentActivity
             }
             // other 'case' lines to check for other
             // permissions this app might request
+        }
+    }
+
+    @OnClick({R.id.searchImageView, R.id.searchTV, R.id.searchET, R.id.settingImageView, R.id.settingTV})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.searchImageView:
+                showSearchET();
+                break;
+            case R.id.searchTV:
+                showSearchET();
+                break;
+            case R.id.searchET:
+                search();
+                break;
+            case R.id.settingImageView:
+                settings();
+                break;
+            case R.id.settingTV:
+                settings();
+                break;
         }
     }
 }

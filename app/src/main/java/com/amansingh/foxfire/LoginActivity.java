@@ -3,9 +3,11 @@ package com.amansingh.foxfire;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -35,10 +37,12 @@ public class LoginActivity extends AppCompatActivity {
     TextInputLayout userIdLayout;
     @BindView(R.id.userPassLayout)
     TextInputLayout userPassLayout;
-    @BindView(R.id.button)
+    @BindView(R.id.okBtn)
     Button button;
     private String uid, pass;
     private String deviceIMEI = "";
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
 
     @SuppressLint("HardwareIds")
     @Override
@@ -47,11 +51,22 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
+        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
 
         deviceIMEI = telephonyManager.getDeviceId();
+
+        //checkLogin();
+    }
+
+    private void checkLogin() {
+        boolean userFirstLogin = pref.getBoolean("login", true);  // getting boolean
+        if (userFirstLogin)
+            Utils.setIntent(this, MainActivity.class);
+        Log.e(TAG, "checkLogin: login found in pref " + userFirstLogin);
     }
 
     private void apiCall() {
@@ -64,13 +79,20 @@ public class LoginActivity extends AppCompatActivity {
                 assert data != null;
                 String password = data.user_password;
                 String imei = data.imei;
+                String passCode = data.lock_password + "";
 
                 Utils.showLog(TAG, "pass, imei from API ", password + " " + imei);
                 Utils.showLog(TAG, "device imei ", deviceIMEI);
+                Utils.showLog(TAG, "device lock pass ", passCode);
 
                 if (pass.equals(password)) {
-                    if (imei.equals(""))
+                    if (imei.equals("867130040052034")) {
+                        editor = pref.edit();
+                        editor.putBoolean("login", true);
+                        editor.putString("passcode", passCode);
+                        editor.apply();
                         Utils.setIntent(LoginActivity.this, MainActivity.class);
+                    }
                     else
                         Utils.showMessage(LoginActivity.this, "Device does not match with user");
                 } else
@@ -85,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    @OnClick(R.id.button)
+    @OnClick(R.id.okBtn)
     public void onViewClicked() {
         Utils.showMessage(LoginActivity.this, "Please Wait....");
         if (checkFields()) {
