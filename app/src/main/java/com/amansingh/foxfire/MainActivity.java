@@ -85,7 +85,11 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
+        mapSpeedTV.setOnClickListener(view -> {
+            screenShot();
+        });
     }
+
 
     private void search() {
 
