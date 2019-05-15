@@ -26,6 +26,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         ButterKnife.bind(this);
+
     }
 
     @OnClick({R.id.changePassBtn, R.id.logOutBtn})

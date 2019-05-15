@@ -17,4 +17,10 @@
         <item name="android:textAlignment">center</item>
     </style>
 
+    <style name="lockText">
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textSize">36sp</item>
+        <item name="android:padding">4dp</item>
+    </style>
+
 </resources>

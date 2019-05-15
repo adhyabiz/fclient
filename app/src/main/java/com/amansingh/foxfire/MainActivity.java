@@ -79,6 +79,11 @@ public class MainActivity extends FragmentActivity
 
     }
 
+    private void screenShot() {
+        //click screenshot of the app
+        // TODO: 15/5/19 do screenshot
+    }
+
     private void settings() {
         Utils.setIntent(this, AppLock.class);
     }
@@ -90,7 +95,6 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onPause() {
         super.onPause();
-
     }
 
     @Override
