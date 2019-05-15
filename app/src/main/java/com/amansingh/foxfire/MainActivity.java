@@ -3,8 +3,11 @@ package com.amansingh.foxfire;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -32,6 +35,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -55,6 +60,9 @@ public class MainActivity extends FragmentActivity
     private GoogleMap map;
     private GoogleApiClient mGoogleApiClient;
     private Marker mCurrLocationMarker;
+    private MediaRecorder myAudioRecorder;
+    private String outputFile;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +91,43 @@ public class MainActivity extends FragmentActivity
         //click screenshot of the app
         // TODO: 15/5/19 do screenshot
     }
+
+    private void audioRecoding() {
+
+    }
+
+    private void init() {
+        outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
+        myAudioRecorder = new MediaRecorder();
+        myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+        myAudioRecorder.setOutputFile(outputFile);
+    }
+
+    private void stopRecording() {
+        Log.e("my audio recorder", " enter try  stop ");
+        myAudioRecorder.stop();
+        myAudioRecorder.release();
+        myAudioRecorder = null;
+
+        uploadRecording();
+    }
+
+    private void uploadRecording() {
+    }
+
+    private void recordAudio() {
+        try {
+            myAudioRecorder.prepare();
+            myAudioRecorder.start();
+        } catch (IllegalStateException ise) {
+            // make something ...
+        } catch (IOException ioe) {
+            // make something
+        }
+    }
+
 
     private void settings() {
         Utils.setIntent(this, AppLock.class);
