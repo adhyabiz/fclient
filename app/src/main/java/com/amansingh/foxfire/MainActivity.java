@@ -2,6 +2,7 @@ package com.amansingh.foxfire;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.media.MediaRecorder;
 import android.os.Build;
@@ -35,6 +36,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import butterknife.BindView;
@@ -81,7 +85,11 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
+        mapSpeedTV.setOnClickListener(view -> {
+            screenShot();
+        });
     }
+
 
     private void search() {
 
@@ -90,6 +98,29 @@ public class MainActivity extends FragmentActivity
     private void screenShot() {
         //click screenshot of the app
         // TODO: 15/5/19 do screenshot
+        Bitmap bitmap = takeScreenshot();
+        saveBitmap(bitmap);
+    }
+
+    public Bitmap takeScreenshot() {
+        View rootView = findViewById(android.R.id.content).getRootView();
+        rootView.setDrawingCacheEnabled(true);
+        return rootView.getDrawingCache();
+    }
+
+    public void saveBitmap(Bitmap bitmap) {
+        File imagePath = new File(Environment.getExternalStorageDirectory() + "/screenshot.png");
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(imagePath);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.e("GREC", e.getMessage(), e);
+        } catch (IOException e) {
+            Log.e("GREC", e.getMessage(), e);
+        }
     }
 
     private void audioRecoding() {
