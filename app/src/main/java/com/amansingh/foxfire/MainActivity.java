@@ -93,6 +93,7 @@ public class MainActivity extends FragmentActivity
     }
 
     private void audioRecoding() {
+        init();
 
     }
 
@@ -238,8 +239,6 @@ public class MainActivity extends FragmentActivity
                         })
                         .create()
                         .show();
-
-
             } else {
                 // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(this,
