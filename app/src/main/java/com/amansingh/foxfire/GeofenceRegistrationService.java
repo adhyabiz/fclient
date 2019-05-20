@@ -23,7 +23,8 @@ public class GeofenceRegistrationService extends IntentService {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
             Log.d(TAG, "GeofencingEvent error " + geofencingEvent.getErrorCode());
-        } else {
+        } else
+            {
             int transaction = geofencingEvent.getGeofenceTransition();
             List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
             Geofence geofence = geofences.get(0);

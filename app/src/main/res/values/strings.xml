@@ -25,4 +25,6 @@
     <string name="change_password">Change Password</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="log_out">Log out</string>
+    <string name="start_Moniter">start_Moniter</string>
+    <string name="stop_Moniter">stop_Moniter</string>
 </resources>
