@@ -3,9 +3,9 @@
 
     <item
         android:id="@+id/action_start_monitor"
-        android:title="@string/start_Moniter" />
+        android:title="Start" />
     <item
         android:id="@+id/action_stop_monitor"
-        android:title="@string/stop_Moniter" />
+        android:title="Stop" />
 
 </menu>
