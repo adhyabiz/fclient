@@ -90,32 +90,7 @@ public class MainActivity extends FragmentActivity
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
 
-    public static double getSpeed(Location currentLocation, Location oldLocation) {
-        //  Click Speed of maps
-        //TODO: 16/5/19 do Notification
 
-        double newLat = currentLocation.getLatitude();
-        double newLon = currentLocation.getLongitude();
-
-        double oldLat = oldLocation.getLatitude();
-        double oldLon = oldLocation.getLongitude();
-
-        if (currentLocation.hasSpeed()) {
-            return currentLocation.getSpeed();
-        } else {
-            double radius = 6371000;
-            double dLat = Math.toRadians(newLat - oldLat);
-            double dLon = Math.toRadians(newLon - oldLon);
-            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(Math.toRadians(newLat)) * Math.cos(Math.toRadians(oldLat)) *
-                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            double c = 2 * Math.asin(Math.sqrt(a));
-            double distance = Math.round(radius * c);
-
-            double timeDifferent = currentLocation.getTime() - oldLocation.getTime();
-            return distance / timeDifferent;
-        }
-    }
 
 
     private void search() {
@@ -152,6 +127,32 @@ public class MainActivity extends FragmentActivity
                 searchET.setVisibility(View.GONE);
         });
 
+    }
+    public static double getSpeed(Location currentLocation, Location oldLocation) {
+        //  Click Speed of maps
+        //TODO: 16/5/19 do Notification
+
+        double newLat = currentLocation.getLatitude();
+        double newLon = currentLocation.getLongitude();
+
+        double oldLat = oldLocation.getLatitude();
+        double oldLon = oldLocation.getLongitude();
+
+        if (currentLocation.hasSpeed()) {
+            return currentLocation.getSpeed();
+        } else {
+            double radius = 6371000;
+            double dLat = Math.toRadians(newLat - oldLat);
+            double dLon = Math.toRadians(newLon - oldLon);
+            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(Math.toRadians(newLat)) * Math.cos(Math.toRadians(oldLat)) *
+                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            double c = 2 * Math.asin(Math.sqrt(a));
+            double distance = Math.round(radius * c);
+
+            double timeDifferent = currentLocation.getTime() - oldLocation.getTime();
+            return distance / timeDifferent;
+        }
     }
 
     private void addNotification() {
@@ -342,14 +343,9 @@ public class MainActivity extends FragmentActivity
                 .radius(Constant.GEOFENCE_RADIUS_IN_METERS)
                 .strokeColor(Color.RED)
                 .strokeWidth(4f));
+
+
     }
-
-
-
-
-
-
-
 
     private void audioRecoding() {
         init();

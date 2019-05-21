@@ -3,6 +3,7 @@ package com.amansingh.foxfire;
 import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -28,6 +29,11 @@ public class GeofenceRegistrationService extends IntentService {
             int transaction = geofencingEvent.getGeofenceTransition();
             List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
             Geofence geofence = geofences.get(0);
+            if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT){
+                Toast.makeText(this, "You are outside", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "inside", Toast.LENGTH_SHORT).show();
+            }
             if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER && geofence.getRequestId().equals(Constant.GEOFENCE_ID_STAN_UNI)) {
                 Log.d(TAG, "You are inside Stanford University");
             } else {
