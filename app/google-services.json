@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "13325514029",
+    "firebase_url": "https://foxfire-38bf3.firebaseio.com",
+    "project_id": "foxfire-38bf3",
+    "storage_bucket": "foxfire-38bf3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:13325514029:android:b9e4eeb05929ee78",
+        "android_client_info": {
+          "package_name": "com.amansingh.foxfire"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "13325514029-22kgg0rrktk15k9eqv2daja1g96dbanr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.amansingh.foxfire",
+            "certificate_hash": "57205d0536167a84833f8eb37acbbe2570c167a1"
+          }
+        },
+        {
+          "client_id": "13325514029-i5pc47orq3i9ju7ubrmleopclftch4r5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTiewKdTd6kF1BbFpRm9q5Ojq0aso-vfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "13325514029-i5pc47orq3i9ju7ubrmleopclftch4r5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
