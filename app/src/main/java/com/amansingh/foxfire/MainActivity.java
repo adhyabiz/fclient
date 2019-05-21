@@ -89,6 +89,7 @@ public class MainActivity extends FragmentActivity
     private boolean isMonitoring = false;
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
+    private boolean isCameraZoomed = true;
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
         //  Click Speed of maps
@@ -205,7 +206,7 @@ public class MainActivity extends FragmentActivity
     }
 
     private void startGeofencing() {
-        Log.d(TAG, "Start geofencing monitoring call");
+        Log.e(TAG, "Start geofencing monitoring call");
         pendingIntent = getGeofencePendingIntent();
         geofencingRequest = new GeofencingRequest.Builder()
                 .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
@@ -213,22 +214,26 @@ public class MainActivity extends FragmentActivity
                 .build();
 
         if (!mGoogleApiClient.isConnected()) {
-            Log.d(TAG, "Google API client not connected");
+            Log.e(TAG, "Google API client not connected");
         } else {
+            Log.e(TAG, "Google API client not connected");
+
             try {
+                Log.e(TAG, "In try  Google API client not connected");
+
                 LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, geofencingRequest,
                         pendingIntent).setResultCallback(new ResultCallback<Status>() {
                     @Override
                     public void onResult(@NonNull Status status) {
                         if (status.isSuccess()) {
-                            Log.d(TAG, "Successfully Geofencing Connected");
+                            Log.e(TAG, "Successfully Geofencing Connected");
                         } else {
-                            Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
+                            Log.e(TAG, "Failed to add Geofencing " + status.getStatus());
                         }
                     }
                 });
             } catch (SecurityException e) {
-                Log.d(TAG, e.getMessage());
+                Log.e(TAG,"in catch"+ e.getMessage());
             }
         }
         isMonitoring = true;
@@ -238,6 +243,8 @@ public class MainActivity extends FragmentActivity
     private PendingIntent getGeofencePendingIntent() {
 
         if (pendingIntent != null) {
+            Log.e(TAG, "panding intent not null ");
+
             return pendingIntent;
         }
         Intent intent = new Intent(this, GeofenceRegistrationService.class);
@@ -265,9 +272,9 @@ public class MainActivity extends FragmentActivity
                     @Override
                     public void onResult(@NonNull Status status) {
                         if (status.isSuccess())
-                            Log.d(TAG, "Stop geofencing");
+                            Log.e(TAG, "Stop geofencing");
                         else
-                            Log.d(TAG, "Not stop geofencing");
+                            Log.e(TAG, "Not stop geofencing");
                     }
                 });
         isMonitoring = false;
@@ -331,6 +338,8 @@ public class MainActivity extends FragmentActivity
     }
 
     private void locationGeofencing() {
+        Log.e(TAG, " enter location geofencing");
+
 
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
         map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
@@ -343,12 +352,6 @@ public class MainActivity extends FragmentActivity
                 .strokeColor(Color.RED)
                 .strokeWidth(4f));
     }
-
-
-
-
-
-
 
 
     private void audioRecoding() {
@@ -459,7 +462,10 @@ public class MainActivity extends FragmentActivity
         //mCurrLocationMarker = map.addMarker(markerOptions);
 
         //move map camera
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+        if (isCameraZoomed) {
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+            isCameraZoomed = false;
+        }
     }
 
     @Override
@@ -606,5 +612,10 @@ public class MainActivity extends FragmentActivity
                 settings();
                 break;
         }
+    }
+
+    public void showGeoMessage(String msg){
+        Log.e(TAG, "showGeoMessage: message "+msg );
+        Toast.makeText(this, "msg "+msg, Toast.LENGTH_SHORT).show();
     }
 }
