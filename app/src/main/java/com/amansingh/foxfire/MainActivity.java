@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.media.MediaRecorder;
 import android.os.Build;
@@ -56,6 +58,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -90,6 +93,7 @@ public class MainActivity extends FragmentActivity
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
 
+
     public static double getSpeed(Location currentLocation, Location oldLocation) {
         //  Click Speed of maps
         //TODO: 16/5/19 do Notification
@@ -118,9 +122,6 @@ public class MainActivity extends FragmentActivity
     }
 
 
-    private void search() {
-
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,8 +152,37 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
-
     }
+
+    private void search() {
+
+        //24/05/2019 Search Use
+
+        String location = searchET.getText().toString();
+        if (location.equals("")) {
+            searchET.setError("please Enter Address");
+        } else {
+            List<Address> addressList = null;
+
+            if (location != null || !location.equals("")) {
+                Geocoder geocoder = new Geocoder(this);
+                try {
+                    addressList = geocoder.getFromLocationName(location, 1);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Address address = addressList.get(0);
+                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                map.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+                map.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+            }
+
+            searchET.setText("");
+
+        }
+    }
+
 
     private void addNotification() {
 
@@ -236,6 +266,8 @@ public class MainActivity extends FragmentActivity
     }
 
     private PendingIntent getGeofencePendingIntent() {
+
+        Toast.makeText(this, "getGeofencing", Toast.LENGTH_SHORT).show();
 
         if (pendingIntent != null) {
             return pendingIntent;
@@ -332,6 +364,7 @@ public class MainActivity extends FragmentActivity
 
     private void locationGeofencing() {
 
+
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
         map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
@@ -343,13 +376,6 @@ public class MainActivity extends FragmentActivity
                 .strokeColor(Color.RED)
                 .strokeWidth(4f));
     }
-
-
-
-
-
-
-
 
     private void audioRecoding() {
         init();
@@ -459,8 +485,9 @@ public class MainActivity extends FragmentActivity
         //mCurrLocationMarker = map.addMarker(markerOptions);
 
         //move map camera
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+        //map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
     }
+
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -595,6 +622,7 @@ public class MainActivity extends FragmentActivity
                 break;
             case R.id.searchTV:
                 showSearchET();
+                search();
                 break;
             case R.id.searchET:
                 search();
