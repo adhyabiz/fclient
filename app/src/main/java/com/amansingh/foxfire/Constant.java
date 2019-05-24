@@ -9,6 +9,7 @@ public class Constant {
     public static final String GEOFENCE_ID_STAN_UNI = "STAN_UNI";
     public static final float GEOFENCE_RADIUS_IN_METERS = 5000;
 
+
     /**
      * Map for storing information about stanford university in the Stanford.
      */
