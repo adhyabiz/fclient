@@ -1,5 +1,6 @@
 package com.amansingh.foxfire;
 
+import android.app.Activity;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -34,10 +35,8 @@ public class GeofenceRegistrationService extends IntentService {
             List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
             Geofence geofence = geofences.get(0);
             if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT){
-                Log.e(TAG, "GeofencingEvent outside error " + geofencingEvent.getErrorCode());
                 Toast.makeText(this, "You are outside", Toast.LENGTH_SHORT).show();
             } else {
-                Log.e(TAG, "GeofencingEvent inside error " + geofencingEvent.getErrorCode());
                 Toast.makeText(this, "inside", Toast.LENGTH_SHORT).show();
             }
             if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER && geofence.getRequestId().equals(Constant.GEOFENCE_ID_STAN_UNI)) {

@@ -51,6 +51,7 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,7 +62,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends FragmentActivity
+public class MainActivity<DatabaseReference, databaseRefernce> extends FragmentActivity
         implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -89,6 +90,10 @@ public class MainActivity extends FragmentActivity
     private boolean isMonitoring = false;
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
+
+
+    private FirebaseDatabase firebasedatabase=FirebaseDatabase.getInstance();
+    private DatabaseReference  databaseReference= (DatabaseReference) firebasedatabase.getReference();
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
         //  Click Speed of maps
@@ -334,6 +339,7 @@ public class MainActivity extends FragmentActivity
 
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
         map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
+        Toast.makeText(this, "harry", Toast.LENGTH_SHORT).show();
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
 
 
@@ -343,13 +349,6 @@ public class MainActivity extends FragmentActivity
                 .strokeColor(Color.RED)
                 .strokeWidth(4f));
     }
-
-
-
-
-
-
-
 
     private void audioRecoding() {
         init();
@@ -459,7 +458,7 @@ public class MainActivity extends FragmentActivity
         //mCurrLocationMarker = map.addMarker(markerOptions);
 
         //move map camera
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+//        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
     }
 
     @Override
@@ -472,11 +471,14 @@ public class MainActivity extends FragmentActivity
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+//            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+//            Log.e(TAG, "onConnected: " );
 
             startLocationMonitor();
             startGeofencing();
         }
+
+
     }
 
     private void startLocationMonitor() {
