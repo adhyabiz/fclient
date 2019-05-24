@@ -156,7 +156,7 @@ public class MainActivity extends FragmentActivity
 
     private void search() {
 
-        //24/05/2019 Search Use
+        //24/05/2019 Edit Search Location
 
         String location = searchET.getText().toString();
         if (location.equals("")) {
