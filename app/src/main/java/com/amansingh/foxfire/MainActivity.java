@@ -103,8 +103,10 @@ public class MainActivity extends FragmentActivity
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
     private FirebaseFirestore firestore;
-    private String user_id;
+    private String user_id, master_id;
+    private HashMap<String, Object> locations = new HashMap<>();
     private SharedPreferences pref;
+    private boolean updatedLocation = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +123,12 @@ public class MainActivity extends FragmentActivity
         checkFirebase();
 
         pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        user_id = pref.getString("user", "null");  // getting boolean
+        user_id = pref.getString("user", "null");  // getting user_id
+        master_id = pref.getString("master", "null");  // getting master_id
+
+        Log.e(TAG, "onCreate: master_id " + master_id);
+
+        addUserData();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -141,6 +148,27 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
+    }
+
+    private void addUserData() {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("user_id", user_id);
+        map.put("master_id", master_id);
+        firestore.collection("Users").document(user_id)
+                .get().addOnCompleteListener(task -> {
+            if (task.isSuccessful())
+                Log.e(TAG, "addUserData: data exists");
+            else {
+                firestore.collection("Users").document(user_id).set(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                Log.e(TAG, "addUserData: user data saved ");
+                            else
+                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                        });
+            }
+        });
+
     }
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
@@ -394,7 +422,7 @@ public class MainActivity extends FragmentActivity
         map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
 
-        Circle circle = map.addCircle(new CircleOptions()
+        map.addCircle(new CircleOptions()
                 .center(new LatLng(latLng.latitude, latLng.longitude))
                 .radius(Constant.GEOFENCE_RADIUS_IN_METERS)
                 .strokeColor(Color.RED)
@@ -462,10 +490,7 @@ public class MainActivity extends FragmentActivity
                     == PackageManager.PERMISSION_GRANTED) {
                 //Location Permission already granted
                 buildGoogleApiClient();
-
                 map.setMyLocationEnabled(true);
-
-
             } else {
                 //Request Location Permission
                 checkLocationPermission();
@@ -473,7 +498,6 @@ public class MainActivity extends FragmentActivity
         } else {
             buildGoogleApiClient();
             map.setMyLocationEnabled(true);
-
         }
     }
 
@@ -493,16 +517,43 @@ public class MainActivity extends FragmentActivity
             mCurrLocationMarker.remove();
         }
 
+        Log.e(TAG, "onLocationChanged: on location change called " );
         //place current location market
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        locations.put("lat", location.getLatitude());
+        locations.put("long", location.getLongitude());
+
+        if (!updatedLocation) {
+            Log.e(TAG, "onLocationChanged: inside updatedLocation");
+            addLocationData();
+            updatedLocation = true;
+        } else {
+            Log.e(TAG, "onLocationChanged: else of updatedLocation");
+        }
+
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
-        //markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-        //mCurrLocationMarker = map.addMarker(markerOptions);
 
-        //move map camera
-        //map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+/*        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+        mCurrLocationMarker = map.addMarker(markerOptions);
+
+        move map camera
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));*/
+    }
+
+    private void addLocationData() {
+        Log.e(TAG, "addLocationData: called");
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("location", locations);
+        map.put("time", FieldValue.serverTimestamp());
+        firestore.collection("Users").document(user_id).update(map)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful())
+                        Log.e(TAG, "addUserData: user data saved ");
+                    else
+                        Log.e(TAG, "addUserData: user data error " + task.getException().getMessage());
+                });
     }
 
     @Override

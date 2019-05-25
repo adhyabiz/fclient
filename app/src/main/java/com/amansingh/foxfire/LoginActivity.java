@@ -85,6 +85,7 @@ public class LoginActivity extends AppCompatActivity {
                 String password = data.user_password;
                 String imei = data.imei;
                 String passCode = data.lock_password + "";
+                String master_id = data.master_id+"";
 
                 Utils.showLog(TAG, "pass, imei from API ", password + " " + imei);
                 Utils.showLog(TAG, "device imei ", deviceIMEI);
@@ -95,6 +96,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor = pref.edit();
                         editor.putBoolean("login", true);
                         editor.putString("passcode", passCode);
+                        editor.putString("master", master_id);
                         editor.putString("user", userIdLayout.getEditText().getText().toString());
                         editor.apply();
                         Utils.setIntent(LoginActivity.this, MainActivity.class);
