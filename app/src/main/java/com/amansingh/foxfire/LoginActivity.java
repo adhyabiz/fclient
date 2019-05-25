@@ -90,6 +90,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor = pref.edit();
                         editor.putBoolean("login", true);
                         editor.putString("passcode", passCode);
+                        editor.putString("user",userIdLayout.getEditText().getText().toString());
                         editor.apply();
                         Utils.setIntent(LoginActivity.this, MainActivity.class);
                     } else

@@ -4,8 +4,11 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -32,6 +35,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.amansingh.foxfire.Utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
@@ -53,12 +57,16 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -92,6 +100,9 @@ public class MainActivity extends FragmentActivity
     private boolean isMonitoring = false;
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
+    private FirebaseFirestore firestore;
+    private String user_id;
+    private SharedPreferences pref;
 
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
@@ -121,8 +132,6 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,6 +143,9 @@ public class MainActivity extends FragmentActivity
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
 
+        firestore = FirebaseFirestore.getInstance();
+        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        user_id = pref.getString("user", "null");  // getting boolean
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -141,7 +153,8 @@ public class MainActivity extends FragmentActivity
                 .addOnConnectionFailedListener(this).build();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
         }
 
@@ -247,14 +260,11 @@ public class MainActivity extends FragmentActivity
         } else {
             try {
                 LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, geofencingRequest,
-                        pendingIntent).setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (status.isSuccess()) {
-                            Log.d(TAG, "Successfully Geofencing Connected");
-                        } else {
-                            Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
-                        }
+                        pendingIntent).setResultCallback(status -> {
+                    if (status.isSuccess()) {
+                        Log.d(TAG, "Successfully Geofencing Connected");
+                    } else {
+                        Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
                     }
                 });
             } catch (SecurityException e) {
@@ -267,7 +277,7 @@ public class MainActivity extends FragmentActivity
 
     private PendingIntent getGeofencePendingIntent() {
 
-        Toast.makeText(this, "getGeofencing", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, "getGeofencing", Toast.LENGTH_SHORT).show();
 
         if (pendingIntent != null) {
             return pendingIntent;
@@ -499,12 +509,41 @@ public class MainActivity extends FragmentActivity
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+//            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
 
-            startLocationMonitor();
+//            startLocationMonitor();
             startGeofencing();
+            LocalBroadcastManager.getInstance(this).registerReceiver(
+                    mMessageReceiver, new IntentFilter("Data"));
         }
     }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "onReceive: msg from GeoService " + message);
+
+            if (message.contains("outside")) {
+                Log.e(TAG, "onReceive: inside outside if" );
+                Log.e(TAG, "onReceive: user id "+user_id);
+                //outside the fencing
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("time", FieldValue.serverTimestamp());
+                map.put("val", "true");
+                firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
+                        .addOnCompleteListener(task -> {
+                            if (task.isComplete()) {
+                                Log.e(TAG, "firebase: data send");
+                            } else {
+                                Log.e(TAG, "firebase: error " + Objects.requireNonNull(Objects.requireNonNull(task).getException()).getMessage());
+                            }
+                        });
+            }
+        }
+    };
 
     private void startLocationMonitor() {
 

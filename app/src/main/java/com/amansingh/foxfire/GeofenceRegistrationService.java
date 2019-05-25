@@ -4,10 +4,13 @@ import android.app.Activity;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
@@ -16,7 +19,6 @@ import java.util.List;
 
 public class GeofenceRegistrationService extends IntentService {
     private static final String TAG = "GeoIntentService";
-    private Context activity;
 
 
     public GeofenceRegistrationService() {
@@ -26,7 +28,7 @@ public class GeofenceRegistrationService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
-        activity = this;
+        Context activity = this;
         if (geofencingEvent.hasError()) {
             Log.e(TAG, "GeofencingEvent error " + geofencingEvent.getErrorCode());
         } else
@@ -35,27 +37,19 @@ public class GeofenceRegistrationService extends IntentService {
             List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
             Geofence geofence = geofences.get(0);
             if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT){
-                Toast.makeText(this, "You are outside", Toast.LENGTH_SHORT).show();
+                sendMessageToActivity("inside", activity);
             } else {
-                Toast.makeText(this, "inside", Toast.LENGTH_SHORT).show();
-            }
-            if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER && geofence.getRequestId().equals(Constant.GEOFENCE_ID_STAN_UNI)) {
-                Log.e(TAG, "You are inside Stanford University");
-                Toast.makeText(this, "inside", Toast.LENGTH_SHORT).show();
-            } else if (transaction==Geofence.GEOFENCE_TRANSITION_EXIT&&geofence.getRequestId().equals(Constant.GEOFENCE_RADIUS_IN_METERS)){
-
-                Log.e(TAG, "You are outside Stanford University");
-                Toast.makeText(this, "outside", Toast.LENGTH_SHORT).show();
-            }else {
-                Log.e(TAG, "You are outside Stanford University");
-
+                sendMessageToActivity("outside", activity);
             }
         }
     }
 
-    //callbacks interface for communication with service clients!
-    public interface Callbacks{
-        public void updateClient(long data);
+    //send data to main
+    private static void sendMessageToActivity(String msg, Context context) {
+        Intent intent = new Intent("Data");
+        // You can also include some extra data.
+        intent.putExtra("Status", msg);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
 
