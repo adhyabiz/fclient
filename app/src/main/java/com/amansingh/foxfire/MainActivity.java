@@ -41,8 +41,6 @@ import com.amansingh.foxfire.Utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationListener;
@@ -57,6 +55,11 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -66,7 +69,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -104,6 +106,42 @@ public class MainActivity extends FragmentActivity
     private String user_id;
     private SharedPreferences pref;
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.main_map_frag);
+        assert mapFragment != null;
+        mapFragment.getMapAsync(this);
+
+        firestore = FirebaseFirestore.getInstance();
+        checkFirebase();
+
+        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        user_id = pref.getString("user", "null");  // getting boolean
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).build();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
+        }
+
+
+        searchET.setVisibility(View.GONE);
+
+        searchET.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus)
+                searchET.setVisibility(View.GONE);
+        });
+    }
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
         //  Click Speed of maps
@@ -132,38 +170,23 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+    private void checkFirebase() {
+        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        connectedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class);
+                if (connected) {
+                    Log.d(TAG, "connected");
+                } else {
+                    Log.d(TAG, "not connected");
+                }
+            }
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.main_map_frag);
-        assert mapFragment != null;
-        mapFragment.getMapAsync(this);
-
-        firestore = FirebaseFirestore.getInstance();
-        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        user_id = pref.getString("user", "null");  // getting boolean
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
-        }
-
-
-        searchET.setVisibility(View.GONE);
-
-        searchET.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus)
-                searchET.setVisibility(View.GONE);
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w(TAG, "Listener was cancelled");
+            }
         });
     }
 
@@ -276,9 +299,6 @@ public class MainActivity extends FragmentActivity
     }
 
     private PendingIntent getGeofencePendingIntent() {
-
-//        Toast.makeText(this, "getGeofencing", Toast.LENGTH_SHORT).show();
-
         if (pendingIntent != null) {
             return pendingIntent;
         }
@@ -303,14 +323,11 @@ public class MainActivity extends FragmentActivity
     private void stopGeoFencing() {
         pendingIntent = getGeofencePendingIntent();
         LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, pendingIntent)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (status.isSuccess())
-                            Log.d(TAG, "Stop geofencing");
-                        else
-                            Log.d(TAG, "Not stop geofencing");
-                    }
+                .setResultCallback(status -> {
+                    if (status.isSuccess())
+                        Log.d(TAG, "Stop geofencing");
+                    else
+                        Log.d(TAG, "Not stop geofencing");
                 });
         isMonitoring = false;
         invalidateOptionsMenu();
@@ -373,12 +390,9 @@ public class MainActivity extends FragmentActivity
     }
 
     private void locationGeofencing() {
-
-
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
         map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
-
 
         Circle circle = map.addCircle(new CircleOptions()
                 .center(new LatLng(latLng.latitude, latLng.longitude))
@@ -388,11 +402,6 @@ public class MainActivity extends FragmentActivity
     }
 
     private void audioRecoding() {
-        init();
-
-    }
-
-    private void init() {
         outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
         myAudioRecorder = new MediaRecorder();
         myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -423,7 +432,6 @@ public class MainActivity extends FragmentActivity
             // make something
         }
     }
-
 
     private void settings() {
         Utils.setIntent(this, AppLock.class);
@@ -469,7 +477,6 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -497,7 +504,6 @@ public class MainActivity extends FragmentActivity
         //move map camera
         //map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
     }
-
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -527,28 +533,23 @@ public class MainActivity extends FragmentActivity
             Log.e(TAG, "onReceive: msg from GeoService " + message);
 
             if (message.contains("outside")) {
-                Log.e(TAG, "onReceive: inside outside if" );
-                Log.e(TAG, "onReceive: user id "+user_id);
+                Log.e(TAG, "onReceive: inside outside if");
+                Log.e(TAG, "onReceive: user id " + user_id);
                 //outside the fencing
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
                 map.put("val", "true");
+                Log.e(TAG, "onReceive: after map");
                 firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
-                        .addOnCompleteListener(task -> {
-                            if (task.isComplete()) {
-                                Log.e(TAG, "firebase: data send");
-                            } else {
-                                Log.e(TAG, "firebase: error " + Objects.requireNonNull(Objects.requireNonNull(task).getException()).getMessage());
-                            }
-                        });
+                        .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
+                        .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
+                Log.e(TAG, "onReceive: after firebase");
             }
         }
     };
 
     private void startLocationMonitor() {
-
         //Edit.........
-
         Log.d(TAG, "start location monitor");
         LocationRequest locationRequest = LocationRequest.create()
                 .setInterval(2000)
@@ -580,7 +581,6 @@ public class MainActivity extends FragmentActivity
     public void onConnectionSuspended(int i) {
         //Edit.........
         Log.d(TAG, "Google Connection Suspended");
-
     }
 
     @Override

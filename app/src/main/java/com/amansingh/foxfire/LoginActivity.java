@@ -56,7 +56,6 @@ public class LoginActivity extends AppCompatActivity {
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
-
         deviceIMEI = telephonyManager.getDeviceId();
 
         checkLogin();
@@ -67,6 +66,12 @@ public class LoginActivity extends AppCompatActivity {
         if (userFirstLogin)
             Utils.setIntent(this, MainActivity.class);
         Log.e(TAG, "checkLogin: login found in pref " + userFirstLogin);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        finish();
     }
 
     private void apiCall() {
@@ -90,7 +95,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor = pref.edit();
                         editor.putBoolean("login", true);
                         editor.putString("passcode", passCode);
-                        editor.putString("user",userIdLayout.getEditText().getText().toString());
+                        editor.putString("user", userIdLayout.getEditText().getText().toString());
                         editor.apply();
                         Utils.setIntent(LoginActivity.this, MainActivity.class);
                     } else
