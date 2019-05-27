@@ -332,14 +332,6 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
-
-        if (!updatedLocation) {
-            Log.e(TAG, "onLocationChanged: inside updatedLocation");
-            addLocationData();
-            updatedLocation = true;
-        } else {
-            Log.e(TAG, "onLocationChanged: else of updatedLocation");
-        }
     }
 
     private PendingIntent getGeofencePendingIntent() {
@@ -578,7 +570,13 @@ public class MainActivity extends FragmentActivity
         locations.put("lat", location.getLatitude());
         locations.put("long", location.getLongitude());
 
-        Log.e(TAG, "onLocationChanged: locations " + locations.toString());
+        if (!updatedLocation) {
+            Log.e(TAG, "onLocationChanged: inside updatedLocation");
+            addLocationData();
+            updatedLocation = true;
+        } else {
+            Log.e(TAG, "onLocationChanged: else of updatedLocation");
+        }
 
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
