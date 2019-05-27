@@ -20,8 +20,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -304,33 +302,34 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    private void startGeofencing() {
-        Log.d(TAG, "Start geofencing monitoring call");
-        pendingIntent = getGeofencePendingIntent();
-        geofencingRequest = new GeofencingRequest.Builder()
-                .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
-                .addGeofence(getGeofence())
-                .build();
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "onReceive: msg from GeoService " + message);
 
-        if (!mGoogleApiClient.isConnected()) {
-            Log.d(TAG, "Google API client not connected");
-        } else {
-            try {
-                LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, geofencingRequest,
-                        pendingIntent).setResultCallback(status -> {
-                    if (status.isSuccess()) {
-                        Log.d(TAG, "Successfully Geofencing Connected");
-                    } else {
-                        Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
-                    }
-                });
-            } catch (SecurityException e) {
-                Log.d(TAG, e.getMessage());
+            if (message.contains("outside")) {
+                Log.e(TAG, "onReceive: inside outside if");
+                Log.e(TAG, "onReceive: user id " + user_id);
+                //outside the fencing
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("time", FieldValue.serverTimestamp());
+                map.put("val", "true");
+                Log.e(TAG, "onReceive: after map");
+                if (!notificationSent) {
+                    firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
+                            .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
+                            .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
+                    notificationSent = true;
+                }
+                Log.e(TAG, "onReceive: after firebase");
+            } else {
+                Log.e(TAG, "onReceive: inside geo main");
             }
         }
-        isMonitoring = true;
-        invalidateOptionsMenu();
-    }
+    };
 
     private PendingIntent getGeofencePendingIntent() {
         if (pendingIntent != null) {
@@ -386,53 +385,46 @@ public class MainActivity extends FragmentActivity
         mGoogleApiClient.reconnect();
     }
 
+    private void startGeofencing() {
+        Log.d(TAG, "Start geofencing monitoring call");
+        pendingIntent = getGeofencePendingIntent();
+        geofencingRequest = new GeofencingRequest.Builder()
+                .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .addGeofence(getGeofence())
+                .build();
+
+        if (!mGoogleApiClient.isConnected()) {
+            Log.d(TAG, "Google API client not connected");
+        } else {
+            Log.e(TAG, "startGeofencing: else google api connected ");
+            try {
+                LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, geofencingRequest,
+                        pendingIntent).setResultCallback(status -> {
+                    if (status.isSuccess()) {
+                        Log.d(TAG, "Successfully Geofencing Connected");
+                    } else {
+                        Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
+                    }
+                });
+            } catch (SecurityException e) {
+                Log.d(TAG, e.getMessage());
+            }
+        }
+        isMonitoring = true;
+        invalidateOptionsMenu();
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
+        stopGeoFencing();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.manu_map_activity, menu);
-        if (isMonitoring) {
-            menu.findItem(R.id.action_start_monitor).setVisible(false);
-            menu.findItem(R.id.action_stop_monitor).setVisible(true);
-        } else {
-            menu.findItem(R.id.action_start_monitor).setVisible(true);
-            menu.findItem(R.id.action_stop_monitor).setVisible(false);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_start_monitor:
-                startGeofencing();
-                break;
-            case R.id.action_stop_monitor:
-                stopGeoFencing();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void locationGeofencing() {
-        LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
-        map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
-
-        map.addCircle(new CircleOptions()
-                .center(new LatLng(latLng.latitude, latLng.longitude))
-                .radius(Constant.GEOFENCE_RADIUS_IN_METERS)
-                .strokeColor(Color.RED)
-                .strokeWidth(4f));
+        stopGeoFencing();
     }
 
     private void audioRecoding() {
@@ -516,32 +508,18 @@ public class MainActivity extends FragmentActivity
         mGoogleApiClient.connect();
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String message = intent.getStringExtra("Status");
-            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "onReceive: msg from GeoService " + message);
+    private void locationGeofencing() {
+        Log.e(TAG, "locationGeofencing: location geoFencing");
+        LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
+        map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
 
-            if (message.contains("outside")) {
-                Log.e(TAG, "onReceive: inside outside if");
-                Log.e(TAG, "onReceive: user id " + user_id);
-                //outside the fencing
-                HashMap<String, Object> map = new HashMap<>();
-                map.put("time", FieldValue.serverTimestamp());
-                map.put("val", "true");
-                Log.e(TAG, "onReceive: after map");
-                if (!notificationSent) {
-                    firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
-                            .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
-                            .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
-                    notificationSent = true;
-                }
-                Log.e(TAG, "onReceive: after firebase");
-            }
-        }
-    };
+        map.addCircle(new CircleOptions()
+                .center(new LatLng(latLng.latitude, latLng.longitude))
+                .radius(Constant.GEOFENCE_RADIUS_IN_METERS)
+                .strokeColor(Color.RED)
+                .strokeWidth(4f));
+    }
 
     private void addLocationData() {
         Log.e(TAG, "addLocationData: called");
