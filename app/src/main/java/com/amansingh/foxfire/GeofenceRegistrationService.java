@@ -39,11 +39,13 @@ public class GeofenceRegistrationService extends IntentService {
 
                 if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER){
                     sendMessageToActivity("inside", activity);
-                } else {
+                    Log.e(TAG, "onHandleIntent:  inside message" );
+                } else
+                {
+                    Log.e(TAG, "onHandleIntent:  outside message" );
                     sendMessageToActivity("outside", activity);
-                }
-
-        }
+                     }
+            }
     }
 
     //send data to main
