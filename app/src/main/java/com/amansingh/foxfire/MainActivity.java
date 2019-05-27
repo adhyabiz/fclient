@@ -106,47 +106,36 @@ public class MainActivity extends FragmentActivity
     private boolean updatedLocation = false;
     private boolean notificationSent = false;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "onReceive: msg from GeoService " + message);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.main_map_frag);
-        assert mapFragment != null;
-        mapFragment.getMapAsync(this);
-
-        firestore = FirebaseFirestore.getInstance();
-        checkFirebase();
-
-        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        user_id = pref.getString("user", "null");  // getting user_id
-        master_id = pref.getString("master", "null");  // getting master_id
-
-        Log.e(TAG, "onCreate: master_id " + master_id);
-
-        addUserData();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
+            if (message.contains("outside")) {
+                Log.e(TAG, "onReceive: inside outside if");
+                Log.e(TAG, "onReceive: user id " + user_id);
+                //outside the fencing
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("time", FieldValue.serverTimestamp());
+                map.put("val", "true");
+                map.put("master_id", master_id);
+                map.put("user_id", user_id);
+                Log.e(TAG, "onReceive: after map");
+                if (!notificationSent) {
+                    firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
+                            .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
+                            .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
+                    notificationSent = true;
+                }
+                Log.e(TAG, "onReceive: after firebase");
+            } else {
+                Log.e(TAG, "onReceive: inside geo main");
+            }
         }
-
-
-        searchET.setVisibility(View.GONE);
-
-        searchET.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus)
-                searchET.setVisibility(View.GONE);
-        });
-    }
+    };
 
     private void addUserData() {
         HashMap<String, Object> map = new HashMap<>();
@@ -302,34 +291,48 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String message = intent.getStringExtra("Status");
-            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "onReceive: msg from GeoService " + message);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-            if (message.contains("outside")) {
-                Log.e(TAG, "onReceive: inside outside if");
-                Log.e(TAG, "onReceive: user id " + user_id);
-                //outside the fencing
-                HashMap<String, Object> map = new HashMap<>();
-                map.put("time", FieldValue.serverTimestamp());
-                map.put("val", "true");
-                Log.e(TAG, "onReceive: after map");
-                if (!notificationSent) {
-                    firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
-                            .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
-                            .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
-                    notificationSent = true;
-                }
-                Log.e(TAG, "onReceive: after firebase");
-            } else {
-                Log.e(TAG, "onReceive: inside geo main");
-            }
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.main_map_frag);
+        assert mapFragment != null;
+        mapFragment.getMapAsync(this);
+
+        firestore = FirebaseFirestore.getInstance();
+        checkFirebase();
+
+        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        user_id = pref.getString("user", "null");  // getting user_id
+        master_id = pref.getString("master", "null");  // getting master_id
+        master_id += " ";
+
+        Log.e(TAG, "onCreate: master_id " + master_id);
+
+        addUserData();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).build();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
         }
-    };
+
+
+        searchET.setVisibility(View.GONE);
+
+        searchET.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus)
+                searchET.setVisibility(View.GONE);
+        });
+    }
 
     private PendingIntent getGeofencePendingIntent() {
         if (pendingIntent != null) {
