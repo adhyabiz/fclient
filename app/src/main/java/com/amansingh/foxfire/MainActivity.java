@@ -50,7 +50,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -107,6 +106,7 @@ public class MainActivity extends FragmentActivity
     private HashMap<String, Object> locations = new HashMap<>();
     private SharedPreferences pref;
     private boolean updatedLocation = false;
+    private boolean notificationSent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -510,37 +510,32 @@ public class MainActivity extends FragmentActivity
         mGoogleApiClient.connect();
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        //when location changes Edit.........
-        if (mCurrLocationMarker != null) {
-            mCurrLocationMarker.remove();
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "onReceive: msg from GeoService " + message);
+
+            if (message.contains("outside")) {
+                Log.e(TAG, "onReceive: inside outside if");
+                Log.e(TAG, "onReceive: user id " + user_id);
+                //outside the fencing
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("time", FieldValue.serverTimestamp());
+                map.put("val", "true");
+                Log.e(TAG, "onReceive: after map");
+                if (!notificationSent) {
+                    firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
+                            .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
+                            .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
+                    notificationSent = true;
+                }
+                Log.e(TAG, "onReceive: after firebase");
+            }
         }
-
-        Log.e(TAG, "onLocationChanged: on location change called " );
-        //place current location market
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        locations.put("lat", location.getLatitude());
-        locations.put("long", location.getLongitude());
-
-        if (!updatedLocation) {
-            Log.e(TAG, "onLocationChanged: inside updatedLocation");
-            addLocationData();
-            updatedLocation = true;
-        } else {
-            Log.e(TAG, "onLocationChanged: else of updatedLocation");
-        }
-
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("Current Position");
-
-/*        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-        mCurrLocationMarker = map.addMarker(markerOptions);
-
-        move map camera
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));*/
-    }
+    };
 
     private void addLocationData() {
         Log.e(TAG, "addLocationData: called");
@@ -575,29 +570,37 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String message = intent.getStringExtra("Status");
-            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "onReceive: msg from GeoService " + message);
-
-            if (message.contains("outside")) {
-                Log.e(TAG, "onReceive: inside outside if");
-                Log.e(TAG, "onReceive: user id " + user_id);
-                //outside the fencing
-                HashMap<String, Object> map = new HashMap<>();
-                map.put("time", FieldValue.serverTimestamp());
-                map.put("val", "true");
-                Log.e(TAG, "onReceive: after map");
-                firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
-                        .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
-                        .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
-                Log.e(TAG, "onReceive: after firebase");
-            }
+    @Override
+    public void onLocationChanged(Location location) {
+        //when location changes Edit.........
+        if (mCurrLocationMarker != null) {
+            mCurrLocationMarker.remove();
         }
-    };
+
+        Log.e(TAG, "onLocationChanged: on location change called ");
+        //place current location market
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        locations.put("lat", location.getLatitude());
+        locations.put("long", location.getLongitude());
+
+        if (!updatedLocation) {
+            Log.e(TAG, "onLocationChanged: inside updatedLocation");
+            addLocationData();
+            updatedLocation = true;
+        } else {
+            Log.e(TAG, "onLocationChanged: else of updatedLocation");
+        }
+
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("Current Position");
+
+/*        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+        mCurrLocationMarker = map.addMarker(markerOptions);
+
+        move map camera
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));*/
+    }
 
     private void startLocationMonitor() {
         //Edit.........
