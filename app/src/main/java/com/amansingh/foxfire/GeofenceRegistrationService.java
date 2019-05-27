@@ -1,13 +1,9 @@
 package com.amansingh.foxfire;
 
-import android.app.Activity;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
-import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -38,10 +34,13 @@ public class GeofenceRegistrationService extends IntentService {
             Geofence geofence = geofences.get(0);
 
                 if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER){
-                    sendMessageToActivity("inside", activity);
+                    sendMessageToActivity("inside enter", activity);
                     Log.e(TAG, "onHandleIntent:  inside message" );
-                } else
-                {
+                } else if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT) {
+
+                    sendMessageToActivity("inside exit", activity);
+                    Log.e(TAG, "onHandleIntent:  inside message");
+                } else {
                     Log.e(TAG, "onHandleIntent:  outside message" );
                     sendMessageToActivity("outside", activity);
                      }

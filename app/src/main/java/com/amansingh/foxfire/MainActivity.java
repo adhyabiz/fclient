@@ -114,55 +114,73 @@ public class MainActivity extends FragmentActivity
             Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
             Log.e(TAG, "onReceive: msg from GeoService " + message);
 
-            if (message.contains("outside")) {
+            if (message.contains("inside")) {
                 Log.e(TAG, "onReceive: inside outside if");
                 Log.e(TAG, "onReceive: user id " + user_id);
                 //outside the fencing
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
                 map.put("val", "true");
-                map.put("master_id", master_id);
-                map.put("user_id", user_id);
+                map.put("master_id", "111");
                 Log.e(TAG, "onReceive: after map");
                 if (!notificationSent) {
-                    firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
-                            .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: data send"))
-                            .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
-                    notificationSent = true;
+                    try {
+                        firestore.collection("Users").document(user_id).collection("Geo").document().update(map)
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.e(TAG, "firebase: data send");
+                                    notificationSent = true;
+                                })
+                                .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "onReceive: exception " + e.getMessage());
+                    }
                 }
                 Log.e(TAG, "onReceive: after firebase");
-            } else {
-                Log.e(TAG, "onReceive: inside geo main");
             }
         }
     };
 
-    private void addUserData() {
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("user_id", user_id);
-        map.put("master_id", master_id);
-        firestore.collection("Users").document(user_id)
-                .get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Log.e(TAG, "addUserData: data exists");
-                firestore.collection("Users").document(user_id).set(map)
-                        .addOnCompleteListener(task1 -> {
-                            if (task1.isSuccessful())
-                                Log.e(TAG, "addUserData: user data saved ");
-                            else
-                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
-                        });
-            } else {
-                firestore.collection("Users").document(user_id).set(map)
-                        .addOnCompleteListener(task1 -> {
-                            if (task1.isSuccessful())
-                                Log.e(TAG, "addUserData: user data saved ");
-                            else
-                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
-                        });
-            }
-        });
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.main_map_frag);
+        assert mapFragment != null;
+        mapFragment.getMapAsync(this);
+
+        firestore = FirebaseFirestore.getInstance();
+        checkFirebase();
+
+        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        user_id = pref.getString("user", "null");  // getting user_id
+        master_id = pref.getString("master", "null");  // getting master_id
+
+        Log.e(TAG, "onCreate: master_id " + master_id);
+
+        addUserData();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).build();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
+        }
+
+
+        searchET.setVisibility(View.GONE);
+
+        searchET.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus)
+                searchET.setVisibility(View.GONE);
+        });
     }
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
@@ -291,47 +309,32 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
-
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.main_map_frag);
-        assert mapFragment != null;
-        mapFragment.getMapAsync(this);
-
-        firestore = FirebaseFirestore.getInstance();
-        checkFirebase();
-
-        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        user_id = pref.getString("user", "null");  // getting user_id
-        master_id = pref.getString("master", "null");  // getting master_id
-        master_id += " ";
-
-        Log.e(TAG, "onCreate: master_id " + master_id);
-
-        addUserData();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
-        }
-
-
-        searchET.setVisibility(View.GONE);
-
-        searchET.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus)
-                searchET.setVisibility(View.GONE);
+    private void addUserData() {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("user_id", user_id);
+        map.put("master_id", master_id);
+        firestore.collection("Users").document(user_id)
+                .get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.e(TAG, "addUserData: data exists");
+                firestore.collection("Users").document(user_id).update(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                Log.e(TAG, "addUserData: user data saved ");
+                            else
+                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                        });
+            } else {
+                firestore.collection("Users").document(user_id).update(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                Log.e(TAG, "addUserData: user data saved ");
+                            else
+                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                        });
+            }
         });
+
     }
 
     private PendingIntent getGeofencePendingIntent() {
@@ -388,6 +391,12 @@ public class MainActivity extends FragmentActivity
         mGoogleApiClient.reconnect();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+
     private void startGeofencing() {
         Log.d(TAG, "Start geofencing monitoring call");
         pendingIntent = getGeofencePendingIntent();
@@ -399,7 +408,6 @@ public class MainActivity extends FragmentActivity
         if (!mGoogleApiClient.isConnected()) {
             Log.d(TAG, "Google API client not connected");
         } else {
-            Log.e(TAG, "startGeofencing: else google api connected ");
             try {
                 LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, geofencingRequest,
                         pendingIntent).setResultCallback(status -> {
@@ -418,16 +426,8 @@ public class MainActivity extends FragmentActivity
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        mGoogleApiClient.disconnect();
-        stopGeoFencing();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopGeoFencing();
     }
 
     private void audioRecoding() {
@@ -512,7 +512,6 @@ public class MainActivity extends FragmentActivity
     }
 
     private void locationGeofencing() {
-        Log.e(TAG, "locationGeofencing: location geoFencing");
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
         map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
@@ -529,6 +528,7 @@ public class MainActivity extends FragmentActivity
         HashMap<String, Object> map = new HashMap<>();
         map.put("location", locations);
         map.put("time", FieldValue.serverTimestamp());
+        map.put("master_id", "111");
         firestore.collection("Users").document(user_id).update(map)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful())

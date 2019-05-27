@@ -7,7 +7,7 @@ import java.util.HashMap;
 class Constant {
 
     static final String GEOFENCE_ID_STAN_UNI = "STAN_UNI";
-    static final float GEOFENCE_RADIUS_IN_METERS = 5000;
+    static final float GEOFENCE_RADIUS_IN_METERS = 10000;
 
     /**
      * Map for storing information about stanford university in the Stanford.
