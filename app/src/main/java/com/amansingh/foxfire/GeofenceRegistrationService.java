@@ -36,11 +36,13 @@ public class GeofenceRegistrationService extends IntentService {
             int transaction = geofencingEvent.getGeofenceTransition();
             List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
             Geofence geofence = geofences.get(0);
-            if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT){
-                sendMessageToActivity("inside", activity);
-            } else {
-                sendMessageToActivity("outside", activity);
-            }
+
+                if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER){
+                    sendMessageToActivity("inside", activity);
+                } else {
+                    sendMessageToActivity("outside", activity);
+                }
+
         }
     }
 

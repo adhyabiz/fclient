@@ -226,7 +226,6 @@ public class MainActivity extends FragmentActivity
     }
 
     private void search() {
-
         //24/05/2019 Search Use
 
         String location = searchET.getText().toString();
