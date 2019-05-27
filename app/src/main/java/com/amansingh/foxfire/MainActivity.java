@@ -156,9 +156,16 @@ public class MainActivity extends FragmentActivity
         map.put("master_id", master_id);
         firestore.collection("Users").document(user_id)
                 .get().addOnCompleteListener(task -> {
-            if (task.isSuccessful())
+            if (task.isSuccessful()) {
                 Log.e(TAG, "addUserData: data exists");
-            else {
+                firestore.collection("Users").document(user_id).set(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                Log.e(TAG, "addUserData: user data saved ");
+                            else
+                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                        });
+            } else {
                 firestore.collection("Users").document(user_id).set(map)
                         .addOnCompleteListener(task1 -> {
                             if (task1.isSuccessful())
