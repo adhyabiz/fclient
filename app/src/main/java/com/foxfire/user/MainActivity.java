@@ -48,6 +48,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -549,9 +550,8 @@ public class MainActivity extends FragmentActivity
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-//            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-
-//            startLocationMonitor();
+            //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            startLocationMonitor();
             startGeofencing();
             LocalBroadcastManager.getInstance(this).registerReceiver(
                     mMessageReceiver, new IntentFilter("Data"));
@@ -568,26 +568,18 @@ public class MainActivity extends FragmentActivity
         Log.e(TAG, "onLocationChanged: on location change called ");
         //place current location market
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        locations.put("lat", location.getLatitude());
-        locations.put("long", location.getLongitude());
-
-        if (!updatedLocation) {
-            Log.e(TAG, "onLocationChanged: inside updatedLocation");
-            addLocationData();
-            updatedLocation = true;
-        } else {
-            Log.e(TAG, "onLocationChanged: else of updatedLocation");
-        }
 
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
 
-/*        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
         mCurrLocationMarker = map.addMarker(markerOptions);
 
-        move map camera
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));*/
+        //move map camera
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+
+        startLocationMonitor();
     }
 
     private void startLocationMonitor() {
@@ -598,18 +590,26 @@ public class MainActivity extends FragmentActivity
                 .setFastestInterval(1000)
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         try {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, new LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, location -> {
 
-                    if (mCurrLocationMarker != null) {
-                        mCurrLocationMarker.remove();
-                    }
-                    markerOptions = new MarkerOptions();
-                    markerOptions.position(new LatLng(location.getLatitude(), location.getLongitude()));
-                    markerOptions.title("Current Location");
-                    mCurrLocationMarker = map.addMarker(markerOptions);
-                    Log.d(TAG, "Location Change Lat Lng " + location.getLatitude() + " " + location.getLongitude());
+                if (mCurrLocationMarker != null) {
+                    mCurrLocationMarker.remove();
+                }
+                markerOptions = new MarkerOptions();
+                markerOptions.position(new LatLng(location.getLatitude(), location.getLongitude()));
+                markerOptions.title("Current Location");
+                mCurrLocationMarker = map.addMarker(markerOptions);
+                Log.d(TAG, "Location Change Lat Lng " + location.getLatitude() + " " + location.getLongitude());
+
+                locations.put("lat", location.getLatitude());
+                locations.put("long", location.getLongitude());
+
+                if (!updatedLocation) {
+                    Log.e(TAG, "onLocationChanged: inside updatedLocation");
+                    addLocationData();
+                    updatedLocation = true;
+                } else {
+                    Log.e(TAG, "onLocationChanged: else of updatedLocation");
                 }
             });
         } catch (SecurityException e) {
