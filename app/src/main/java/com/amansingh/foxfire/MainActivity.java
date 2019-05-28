@@ -106,6 +106,57 @@ public class MainActivity extends FragmentActivity
     private boolean updatedLocation = false;
     private boolean notificationSent = false;
 
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
+        }
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.main_map_frag);
+        assert mapFragment != null;
+        mapFragment.getMapAsync(this);
+
+        firestore = FirebaseFirestore.getInstance();
+        checkFirebase();
+
+        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        user_id = pref.getString("user", "null");  // getting user_id
+        master_id = pref.getString("master", "null");  // getting master_id
+        master_id += " ";
+
+        Log.e(TAG, "onCreate: master_id " + master_id);
+
+        addUserData();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).build();
+
+        searchET.setVisibility(View.GONE);
+
+        searchET.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus)
+                searchET.setVisibility(View.GONE);
+        });
+
+        if (!updatedLocation) {
+            Log.e(TAG, "onLocationChanged: inside updatedLocation");
+            addLocationData();
+            updatedLocation = true;
+        } else {
+            Log.e(TAG, "onLocationChanged: else of updatedLocation");
+        }
+    }
+
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -291,57 +342,6 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
-
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.main_map_frag);
-        assert mapFragment != null;
-        mapFragment.getMapAsync(this);
-
-        firestore = FirebaseFirestore.getInstance();
-        checkFirebase();
-
-        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        user_id = pref.getString("user", "null");  // getting user_id
-        master_id = pref.getString("master", "null");  // getting master_id
-        master_id += " ";
-
-        Log.e(TAG, "onCreate: master_id " + master_id);
-
-        addUserData();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
-        }
-
-
-        searchET.setVisibility(View.GONE);
-
-        searchET.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus)
-                searchET.setVisibility(View.GONE);
-        });
-
-        if (!updatedLocation) {
-            Log.e(TAG, "onLocationChanged: inside updatedLocation");
-            addLocationData();
-            updatedLocation = true;
-        } else {
-            Log.e(TAG, "onLocationChanged: else of updatedLocation");
-        }
-    }
-
     private PendingIntent getGeofencePendingIntent() {
         if (pendingIntent != null) {
             return pendingIntent;
@@ -429,13 +429,23 @@ public class MainActivity extends FragmentActivity
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
-        stopGeoFencing();
+        try {
+            stopGeoFencing();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "onStop: exception " + e.getMessage());
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopGeoFencing();
+        try {
+            stopGeoFencing();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "onStop: exception " + e.getMessage());
+        }
     }
 
     private void audioRecoding() {

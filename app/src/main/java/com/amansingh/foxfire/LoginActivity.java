@@ -56,7 +56,12 @@ public class LoginActivity extends AppCompatActivity {
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
-        deviceIMEI = telephonyManager.getDeviceId();
+        try {
+            deviceIMEI = telephonyManager.getDeviceId();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "onCreate: exception with telephone permission " + e.getMessage());
+        }
 
         checkLogin();
     }
@@ -85,7 +90,7 @@ public class LoginActivity extends AppCompatActivity {
                 String password = data.user_password;
                 String imei = data.imei;
                 String passCode = data.lock_password + "";
-                String master_id = data.master_id+"";
+                String master_id = data.master_id + "";
 
                 Utils.showLog(TAG, "pass, imei from API ", password + " " + imei);
                 Utils.showLog(TAG, "device imei ", deviceIMEI);

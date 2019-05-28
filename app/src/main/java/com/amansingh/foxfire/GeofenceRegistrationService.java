@@ -11,11 +11,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 
-import java.util.List;
+import java.util.Objects;
 
 public class GeofenceRegistrationService extends IntentService {
     private static final String TAG = "GeoIntentService";
-
 
     public GeofenceRegistrationService() {
         super(TAG);
@@ -25,26 +24,21 @@ public class GeofenceRegistrationService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         Context activity = this;
-        if (geofencingEvent.hasError()) {
+        if (Objects.requireNonNull(geofencingEvent).hasError()) {
             Log.e(TAG, "GeofencingEvent error " + geofencingEvent.getErrorCode());
-        } else
-            {
+        } else {
             int transaction = geofencingEvent.getGeofenceTransition();
-            List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
-            Geofence geofence = geofences.get(0);
-
-                if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER){
-                    sendMessageToActivity("inside enter", activity);
-                    Log.e(TAG, "onHandleIntent:  inside message" );
-                } else if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT) {
-
-                    sendMessageToActivity("inside exit", activity);
-                    Log.e(TAG, "onHandleIntent:  inside message");
-                } else {
-                    Log.e(TAG, "onHandleIntent:  outside message" );
-                    sendMessageToActivity("outside", activity);
-                     }
+            if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER) {
+                sendMessageToActivity("inside enter", activity);
+                Log.e(TAG, "onHandleIntent:  enter message");
+            } else if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT) {
+                sendMessageToActivity("outside", activity);
+                Log.e(TAG, "onHandleIntent:  exit message");
+            } else {
+                Log.e(TAG, "onHandleIntent:  outside message");
+                sendMessageToActivity("outside", activity);
             }
+        }
     }
 
     //send data to main
@@ -54,6 +48,4 @@ public class GeofenceRegistrationService extends IntentService {
         intent.putExtra("Status", msg);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
-
-
 }
