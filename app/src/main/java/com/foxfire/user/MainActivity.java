@@ -106,6 +106,8 @@ public class MainActivity extends FragmentActivity
     private SharedPreferences pref;
     private boolean updatedLocation = false;
     private boolean notificationSent = false;
+    private int moveSpeed = 0;
+    private Location oldLocation, newLocation;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -138,7 +140,6 @@ public class MainActivity extends FragmentActivity
                     }
                 }
                 Log.e(TAG, "onReceive: after firebase");
-
             }
         }
     };
@@ -159,7 +160,7 @@ public class MainActivity extends FragmentActivity
 
         pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
         user_id = pref.getString("user", "null");  // getting user_id
-        master_id = pref.getString("master", "null");  // getting master_id
+        master_id = pref.getString("master", "111");  // getting master_id
 
         Log.e(TAG, "onCreate: master_id " + master_id);
 
@@ -175,7 +176,6 @@ public class MainActivity extends FragmentActivity
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
         }
-
 
         searchET.setVisibility(View.GONE);
 
@@ -515,7 +515,7 @@ public class MainActivity extends FragmentActivity
 
     private void locationGeofencing() {
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
-        map.addMarker(new MarkerOptions().position(latLng).title("Stanford University"));
+        map.addMarker(new MarkerOptions().position(latLng).title("New Delhi"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
 
         map.addCircle(new CircleOptions()
@@ -550,8 +550,13 @@ public class MainActivity extends FragmentActivity
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-            startLocationMonitor();
+            try {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+                startLocationMonitor();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e(TAG, "onConnected: ecveption in start " + e.getMessage());
+            }
             startGeofencing();
             LocalBroadcastManager.getInstance(this).registerReceiver(
                     mMessageReceiver, new IntentFilter("Data"));
@@ -582,6 +587,7 @@ public class MainActivity extends FragmentActivity
         startLocationMonitor();
     }
 
+    @SuppressLint("SetTextI18n")
     private void startLocationMonitor() {
         //Edit.........
         Log.d(TAG, "start location monitor");
@@ -595,12 +601,38 @@ public class MainActivity extends FragmentActivity
                 if (mCurrLocationMarker != null) {
                     mCurrLocationMarker.remove();
                 }
+
+                if (oldLocation != null) {
+                    Log.e(TAG, "startLocationMonitor: inside oldLocation!=null ");
+                    moveSpeed = 0;
+                    moveSpeed = (int) getSpeed(location, oldLocation);
+                    oldLocation = location;
+                    if (moveSpeed <= 1)
+                        mapSpeedTV.setText("Not Moving");
+                    else
+                        mapSpeedTV.setText("Speed: " + moveSpeed + " km/h");
+
+                } else {
+                    Log.e(TAG, "startLocationMonitor: location is null");
+                    oldLocation = location;
+                    if (moveSpeed <= 1)
+                        mapSpeedTV.setText("Not Moving");
+                }
+
+                Log.e(TAG, "startLocationMonitor: speed " + moveSpeed);
+
                 markerOptions = new MarkerOptions();
                 markerOptions.position(new LatLng(location.getLatitude(), location.getLongitude()));
                 markerOptions.title("Current Location");
                 mCurrLocationMarker = map.addMarker(markerOptions);
                 Log.d(TAG, "Location Change Lat Lng " + location.getLatitude() + " " + location.getLongitude());
 
+                try {
+                    locations.remove(locations);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "startLocationMonitor: removing previous data");
+                }
                 locations.put("lat", location.getLatitude());
                 locations.put("long", location.getLongitude());
 
