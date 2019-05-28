@@ -1,4 +1,4 @@
-package com.amansingh.foxfire.APICALL.UserData;
+package com.foxfire.user.APICALL.UserData;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

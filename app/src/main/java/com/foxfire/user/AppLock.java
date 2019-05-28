@@ -1,4 +1,4 @@
-package com.amansingh.foxfire;
+package com.foxfire.user;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.amansingh.foxfire.Utils.Utils;
+import com.foxfire.user.Utils.Utils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

@@ -1,4 +1,4 @@
-package com.amansingh.foxfire;
+package com.foxfire.user;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -35,7 +35,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.amansingh.foxfire.Utils.Utils;
+import com.foxfire.user.Utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -137,11 +137,6 @@ public class MainActivity extends FragmentActivity
                     }
                 }
                 Log.e(TAG, "onReceive: after firebase");
-
-            }
-            else {
-                Log.e(TAG, "onReceive: outside outside if");
-                Log.e(TAG, "onReceive: user id " + user_id);
 
             }
         }

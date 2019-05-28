@@ -1,6 +1,6 @@
-package com.amansingh.foxfire.APICALL;
+package com.foxfire.user.APICALL;
 
-import com.amansingh.foxfire.APICALL.UserData.UserData;
+import com.foxfire.user.APICALL.UserData.UserData;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

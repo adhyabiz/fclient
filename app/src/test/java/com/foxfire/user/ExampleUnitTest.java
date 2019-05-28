@@ -1,4 +1,4 @@
-package com.amansingh.foxfire;
+package com.foxfire.user;
 
 import org.junit.Test;
 

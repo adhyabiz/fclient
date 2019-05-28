@@ -1,4 +1,4 @@
-package com.amansingh.foxfire;
+package com.foxfire.user;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -15,10 +15,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.amansingh.foxfire.APICALL.APIClient;
-import com.amansingh.foxfire.APICALL.APIInterface;
-import com.amansingh.foxfire.APICALL.UserData.UserData;
-import com.amansingh.foxfire.Utils.Utils;
+import com.foxfire.user.APICALL.APIClient;
+import com.foxfire.user.APICALL.APIInterface;
+import com.foxfire.user.APICALL.UserData.UserData;
+import com.foxfire.user.Utils.Utils;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Objects;

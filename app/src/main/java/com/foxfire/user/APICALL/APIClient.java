@@ -1,4 +1,4 @@
-package com.amansingh.foxfire.APICALL;
+package com.foxfire.user.APICALL;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;

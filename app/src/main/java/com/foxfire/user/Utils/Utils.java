@@ -1,4 +1,4 @@
-package com.amansingh.foxfire.Utils;
+package com.foxfire.user.Utils;
 
 import android.content.Context;
 import android.content.Intent;

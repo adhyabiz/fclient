@@ -1,4 +1,4 @@
-package com.amansingh.foxfire.DirectionHelper;
+package com.foxfire.user.DirectionHelper;
 
 import android.util.Log;
 

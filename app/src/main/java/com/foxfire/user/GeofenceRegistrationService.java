@@ -1,4 +1,4 @@
-package com.amansingh.foxfire;
+package com.foxfire.user;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -15,6 +15,7 @@ import java.util.List;
 
 public class GeofenceRegistrationService extends IntentService {
     private static final String TAG = "GeoIntentService";
+
 
     public GeofenceRegistrationService() {
         super(TAG);
@@ -36,9 +37,8 @@ public class GeofenceRegistrationService extends IntentService {
                     sendMessageToActivity("inside enter", activity);
                     Log.e(TAG, "onHandleIntent:  inside message" );
                 } else if (transaction == Geofence.GEOFENCE_TRANSITION_EXIT) {
-
                     sendMessageToActivity("inside exit", activity);
-                    Log.e(TAG, "onHandleIntent:  inside exit message");
+                    Log.e(TAG, "onHandleIntent:  inside message");
                 } else {
                     Log.e(TAG, "onHandleIntent:  outside message" );
                     sendMessageToActivity("outside", activity);
