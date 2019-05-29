@@ -144,7 +144,8 @@ public class LoginActivity extends AppCompatActivity {
                                 Log.e(TAG, "loginUser: user data error " + Objects.requireNonNull(task1.getException()).getMessage());
                         });
             } else {
-                firestore.collection("Users").document(user_id).update(map)
+                Log.e(TAG, "uploadData: data do not exists");
+                firestore.collection("Users").document(user_id).set(map)
                         .addOnCompleteListener(task1 -> {
                             if (task1.isSuccessful()) {
                                 Log.e(TAG, "loginUser: user data saved ");
