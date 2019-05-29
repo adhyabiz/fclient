@@ -123,7 +123,7 @@ public class MainActivity extends FragmentActivity
                 //outside the fencing
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
-                map.put("msg", "user " + user_id + " is outside the fencing area at |" + FieldValue.serverTimestamp().toString());
+                map.put("msg", "user " + user_id + " is outside the fencing area at |");
                 map.put("master_id", "111");
                 map.put("title", "Alert!! User Outside Fencing");
                 Log.e(TAG, "onReceive: after map");
@@ -138,7 +138,7 @@ public class MainActivity extends FragmentActivity
                     //outside the fencing
                     HashMap<String, Object> map = new HashMap<>();
                     map.put("time", FieldValue.serverTimestamp());
-                    map.put("msg", "user " + user_id + " is inside the fencing area at |" + FieldValue.serverTimestamp().toString());
+                    map.put("msg", "user " + user_id + " is inside the fencing area at |");
                     map.put("master_id", "111");
                     map.put("title", "Alert!! User Outside Fencing");
                     Log.e(TAG, "onReceive: after map");
@@ -149,7 +149,9 @@ public class MainActivity extends FragmentActivity
     };
 
     private void firestoreFencingNotification(HashMap<String, Object> map, String geo) {
+        Log.e(TAG, "firestoreFencingNotification: inside notification");
         try {
+            Log.e(TAG, "firestoreFencingNotification: inside notification try");
             firestore.collection("Users").document(user_id).collection("Notification").document().set(map)
                     .addOnSuccessListener(aVoid -> {
                         Log.e(TAG, "firebase: data send");
@@ -161,21 +163,10 @@ public class MainActivity extends FragmentActivity
                                     notificationSent = true;
                                 }).addOnFailureListener(e -> Log.e(TAG, "firestoreFencingNotification: failed " + e.getMessage()));
                     })
-                    .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, "onReceive: exception " + e.getMessage());
-        }
-    }
-
-    private void firestoreFencingNotification(HashMap<String, Object> map) {
-        try {
-            firestore.collection("Users").document(user_id).collection("Notification").document().set(map)
-                    .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: notification data send"))
                     .addOnFailureListener(e -> Log.e(TAG, "onFailure: notification failed " + e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "onReceive: exception " + e.getMessage());
+            Log.e(TAG, "onReceive: notification exception " + e.getMessage());
         }
     }
 
@@ -200,6 +191,7 @@ public class MainActivity extends FragmentActivity
         Log.e(TAG, "onCreate: master_id " + master_id);
 
         addUserData();
+        //addNotification();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -374,13 +366,15 @@ public class MainActivity extends FragmentActivity
         });
 
         HashMap<String, Object> map1 = new HashMap<>();
-        map1.put("time", FieldValue.serverTimestamp());
-        map1.put("msg", "user " + user_id + " turn on device |" + FieldValue.serverTimestamp().toString());
-        map1.put("master_id", "111");
-        map1.put("title", "Alert!! User turn on device");
-        Log.e(TAG, "onReceive: after map");
-        firestoreFencingNotification(map1);
+        map1.put("start", "on");
+        updateUserData(map1);
 
+    }
+
+    private void updateUserData(HashMap<String, Object> map1) {
+        firestore.collection("Users").document(user_id).update(map1)
+                .addOnSuccessListener(aVoid -> Log.e(TAG, "updateUserData: success engine updated "))
+                .addOnFailureListener(e -> Log.e(TAG, "updateUserData: failed user update " + e.getMessage()));
     }
 
     private PendingIntent getGeofencePendingIntent() {
@@ -429,19 +423,27 @@ public class MainActivity extends FragmentActivity
         } else {
             Log.d(TAG, "Google play service available");
         }
+        HashMap<String, Object> map1 = new HashMap<>();
+        map1.put("start", "on");
+        updateUserData(map1);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.reconnect();
+        HashMap<String, Object> map1 = new HashMap<>();
+        map1.put("start", "on");
+        updateUserData(map1);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
-        turnOffFirebase();
+        HashMap<String, Object> map1 = new HashMap<>();
+        map1.put("start", "off");
+        updateUserData(map1);
     }
 
 
@@ -476,23 +478,9 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        turnOffFirebase();
-    }
-
-    private void turnOffFirebase() {
-        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("start", "off");
-        firestore.collection("Users").document(user_id)
-                .update(map).addOnSuccessListener(aVoid -> Log.e(TAG, "turnOffFirebase: start off"))
-                .addOnFailureListener(e -> Log.e(TAG, "turnOffFirebase: exception " + e.getMessage()));
-        map.remove("start");
-        map.put("time", FieldValue.serverTimestamp());
-        map.put("msg", "user " + user_id + " turned off device |" + FieldValue.serverTimestamp().toString());
-        map.put("master_id", "111");
-        map.put("title", "Alert!! User turn off device");
-        Log.e(TAG, "onReceive: after map");
-        firestoreFencingNotification(map);
+        HashMap<String, Object> map1 = new HashMap<>();
+        map1.put("start", "on");
+        updateUserData(map1);
     }
 
     private void audioRecoding() {
@@ -538,6 +526,10 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onPause() {
         super.onPause();
+        mGoogleApiClient.disconnect();
+        HashMap<String, Object> map1 = new HashMap<>();
+        map1.put("start", "on");
+        updateUserData(map1);
     }
 
     @SuppressLint("MissingPermission")
@@ -645,7 +637,8 @@ public class MainActivity extends FragmentActivity
         mCurrLocationMarker = map.addMarker(markerOptions);
 
         //move map camera
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+        if (!updatedLocation)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
 
         startLocationMonitor();
     }
