@@ -70,10 +70,13 @@ public class LoginActivity extends AppCompatActivity {
 
     private void checkLogin() {
         boolean userFirstLogin = pref.getBoolean("login", false);  // getting boolean
-        String user = pref.getString("user", "null");
-        String master = pref.getString("master", "null");
         if (userFirstLogin) {
-            uploadData(user, master);
+            Log.e(TAG, "checkLogin: please Wait!!");
+            userPassLayout.setEnabled(false);
+            userIdLayout.setEnabled(false);
+            //String user = pref.getString("user", "null");
+            //String master = pref.getString("master", "null");
+            //uploadData(user, master);
         }
         Log.e(TAG, "checkLogin: login found in pref " + userFirstLogin);
     }
