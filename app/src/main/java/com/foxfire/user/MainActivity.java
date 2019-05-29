@@ -339,6 +339,7 @@ public class MainActivity extends FragmentActivity
         HashMap<String, Object> map = new HashMap<>();
         map.put("user_id", user_id);
         map.put("master_id", master_id);
+        map.put("start", "on");
         firestore.collection("Users").document(user_id)
                 .get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -401,7 +402,7 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-
+        mGoogleApiClient.disconnect();
         int response = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MainActivity.this);
         if (response != ConnectionResult.SUCCESS) {
             Log.d(TAG, "Google Play Service Not Available");
@@ -421,7 +422,9 @@ public class MainActivity extends FragmentActivity
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
+        turnOffFirebase();
     }
+
 
     private void startGeofencing() {
         Log.d(TAG, "Start geofencing monitoring call");
@@ -454,6 +457,16 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        turnOffFirebase();
+    }
+
+    private void turnOffFirebase() {
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("start", "off");
+        firestore.collection("Users").document(user_id)
+                .update(map).addOnSuccessListener(aVoid -> Log.e(TAG, "turnOffFirebase: start off"))
+                .addOnFailureListener(e -> Log.e(TAG, "turnOffFirebase: exception " + e.getMessage()));
     }
 
     private void audioRecoding() {
