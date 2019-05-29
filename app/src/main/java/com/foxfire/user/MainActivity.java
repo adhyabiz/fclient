@@ -168,6 +168,17 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    private void firestoreFencingNotification(HashMap<String, Object> map) {
+        try {
+            firestore.collection("Users").document(user_id).collection("Notification").document().set(map)
+                    .addOnSuccessListener(aVoid -> Log.e(TAG, "firebase: notification data send"))
+                    .addOnFailureListener(e -> Log.e(TAG, "onFailure: notification failed " + e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "onReceive: exception " + e.getMessage());
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -362,6 +373,14 @@ public class MainActivity extends FragmentActivity
             }
         });
 
+        HashMap<String, Object> map1 = new HashMap<>();
+        map1.put("time", FieldValue.serverTimestamp());
+        map1.put("msg", "user " + user_id + " turn on device " + FieldValue.serverTimestamp().toString());
+        map1.put("master_id", "111");
+        map1.put("title", "Alert!! User turn on device");
+        Log.e(TAG, "onReceive: after map");
+        firestoreFencingNotification(map1);
+
     }
 
     private PendingIntent getGeofencePendingIntent() {
@@ -467,6 +486,13 @@ public class MainActivity extends FragmentActivity
         firestore.collection("Users").document(user_id)
                 .update(map).addOnSuccessListener(aVoid -> Log.e(TAG, "turnOffFirebase: start off"))
                 .addOnFailureListener(e -> Log.e(TAG, "turnOffFirebase: exception " + e.getMessage()));
+        map.remove("start");
+        map.put("time", FieldValue.serverTimestamp());
+        map.put("msg", "user " + user_id + " turned off device " + FieldValue.serverTimestamp().toString());
+        map.put("master_id", "111");
+        map.put("title", "Alert!! User turn off device");
+        Log.e(TAG, "onReceive: after map");
+        firestoreFencingNotification(map);
     }
 
     private void audioRecoding() {
