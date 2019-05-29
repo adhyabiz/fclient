@@ -77,6 +77,7 @@ public class LoginActivity extends AppCompatActivity {
             //String user = pref.getString("user", "null");
             //String master = pref.getString("master", "null");
             //uploadData(user, master);
+            Utils.setIntent(LoginActivity.this, MainActivity.class);
         }
         Log.e(TAG, "checkLogin: login found in pref " + userFirstLogin);
     }
