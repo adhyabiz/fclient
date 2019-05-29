@@ -97,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
                 Utils.showLog(TAG, "device lock pass ", passCode);
 
                 if (pass.equals(password)) {
-                    if (imei.equals("867130040052034")) {
+                    if (imei.equals(deviceIMEI)) {
                         editor = pref.edit();
                         editor.putBoolean("login", true);
                         editor.putString("passcode", passCode);
