@@ -117,32 +117,56 @@ public class MainActivity extends FragmentActivity
             Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
             Log.e(TAG, "onReceive: msg from GeoService " + message);
 
-            if (message.contains("inside")) {
-                Log.e(TAG, "onReceive: inside outside if");
+            if (message.contains("outside")) {
+                Log.e(TAG, "onReceive: outside if");
                 Log.e(TAG, "onReceive: user id " + user_id);
                 //outside the fencing
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
-                map.put("val", "true");
+                map.put("msg", "user " + user_id + " is outside the fencing area at " + FieldValue.serverTimestamp().toString());
                 map.put("master_id", "111");
+                map.put("title", "Alert!! User Outside Fencing");
                 Log.e(TAG, "onReceive: after map");
                 if (!notificationSent) {
-                    try {
-                        firestore.collection("Users").document(user_id).collection("Geo").document().set(map)
-                                .addOnSuccessListener(aVoid -> {
-                                    Log.e(TAG, "firebase: data send");
-                                    notificationSent = true;
-                                })
-                                .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "onReceive: exception " + e.getMessage());
-                    }
+                    firestoreFencingNotification(map, "outside");
                 }
                 Log.e(TAG, "onReceive: after firebase");
+            } else if (message.contains("inside")) {
+                if (!notificationSent) {
+                    Log.e(TAG, "onReceive: inside if");
+                    Log.e(TAG, "onReceive: user id " + user_id);
+                    //outside the fencing
+                    HashMap<String, Object> map = new HashMap<>();
+                    map.put("time", FieldValue.serverTimestamp());
+                    map.put("msg", "user " + user_id + " is inside the fencing area at " + FieldValue.serverTimestamp().toString());
+                    map.put("master_id", "111");
+                    map.put("title", "Alert!! User Outside Fencing");
+                    Log.e(TAG, "onReceive: after map");
+                    firestoreFencingNotification(map, "inside");
+                }
             }
         }
     };
+
+    private void firestoreFencingNotification(HashMap<String, Object> map, String geo) {
+        try {
+            firestore.collection("Users").document(user_id).collection("Notification").document().set(map)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.e(TAG, "firebase: data send");
+                        HashMap<String, Object> map1 = new HashMap<>();
+                        map1.put("geoFencing", geo);
+                        firestore.collection("Users").document(user_id).update(map1)
+                                .addOnSuccessListener(aVoid1 -> {
+                                    Log.e(TAG, "firestoreFencingNotification: updated user document");
+                                    notificationSent = true;
+                                }).addOnFailureListener(e -> Log.e(TAG, "firestoreFencingNotification: failed " + e.getMessage()));
+                    })
+                    .addOnFailureListener(e -> Log.e(TAG, "onFailure: failed " + e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "onReceive: exception " + e.getMessage());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -607,16 +631,21 @@ public class MainActivity extends FragmentActivity
                     moveSpeed = 0;
                     moveSpeed = (int) getSpeed(location, oldLocation);
                     oldLocation = location;
-                    if (moveSpeed <= 1)
+                    if (moveSpeed <= 1) {
                         mapSpeedTV.setText("Not Moving");
-                    else
+                        addSpeedToFirebase("Not Moving");
+                    } else {
                         mapSpeedTV.setText("Speed: " + moveSpeed + " km/h");
+                        addSpeedToFirebase(moveSpeed + " KM/H");
+                    }
 
                 } else {
                     Log.e(TAG, "startLocationMonitor: location is null");
                     oldLocation = location;
-                    if (moveSpeed <= 1)
+                    if (moveSpeed <= 1) {
                         mapSpeedTV.setText("Not Moving");
+                        addSpeedToFirebase("Not Moving");
+                    }
                 }
 
                 Log.e(TAG, "startLocationMonitor: speed " + moveSpeed);
@@ -649,6 +678,14 @@ public class MainActivity extends FragmentActivity
         }
 
 
+    }
+
+    private void addSpeedToFirebase(String moveSpeed) {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("speed", moveSpeed);
+        firestore.collection("Users").document(user_id).update(map)
+                .addOnSuccessListener(aVoid -> Log.e(TAG, "addSpeedToFirebase: speed updated"))
+                .addOnFailureListener(e -> Log.e(TAG, "addSpeedToFirebase: speed upload error"));
     }
 
     @Override
