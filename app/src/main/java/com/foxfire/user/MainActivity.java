@@ -123,7 +123,7 @@ public class MainActivity extends FragmentActivity
                 //outside the fencing
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
-                map.put("msg", "user " + user_id + " is outside the fencing area at " + FieldValue.serverTimestamp().toString());
+                map.put("msg", "user " + user_id + " is outside the fencing area at |" + FieldValue.serverTimestamp().toString());
                 map.put("master_id", "111");
                 map.put("title", "Alert!! User Outside Fencing");
                 Log.e(TAG, "onReceive: after map");
@@ -138,7 +138,7 @@ public class MainActivity extends FragmentActivity
                     //outside the fencing
                     HashMap<String, Object> map = new HashMap<>();
                     map.put("time", FieldValue.serverTimestamp());
-                    map.put("msg", "user " + user_id + " is inside the fencing area at " + FieldValue.serverTimestamp().toString());
+                    map.put("msg", "user " + user_id + " is inside the fencing area at |" + FieldValue.serverTimestamp().toString());
                     map.put("master_id", "111");
                     map.put("title", "Alert!! User Outside Fencing");
                     Log.e(TAG, "onReceive: after map");
@@ -375,7 +375,7 @@ public class MainActivity extends FragmentActivity
 
         HashMap<String, Object> map1 = new HashMap<>();
         map1.put("time", FieldValue.serverTimestamp());
-        map1.put("msg", "user " + user_id + " turn on device " + FieldValue.serverTimestamp().toString());
+        map1.put("msg", "user " + user_id + " turn on device |" + FieldValue.serverTimestamp().toString());
         map1.put("master_id", "111");
         map1.put("title", "Alert!! User turn on device");
         Log.e(TAG, "onReceive: after map");
@@ -488,7 +488,7 @@ public class MainActivity extends FragmentActivity
                 .addOnFailureListener(e -> Log.e(TAG, "turnOffFirebase: exception " + e.getMessage()));
         map.remove("start");
         map.put("time", FieldValue.serverTimestamp());
-        map.put("msg", "user " + user_id + " turned off device " + FieldValue.serverTimestamp().toString());
+        map.put("msg", "user " + user_id + " turned off device |" + FieldValue.serverTimestamp().toString());
         map.put("master_id", "111");
         map.put("title", "Alert!! User turn off device");
         Log.e(TAG, "onReceive: after map");
