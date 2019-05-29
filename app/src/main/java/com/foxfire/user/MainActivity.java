@@ -343,14 +343,27 @@ public class MainActivity extends FragmentActivity
         map.put("user_id", user_id);
         map.put("master_id", master_id);
         map.put("start", "on");
-
-        firestore.collection("Users").document(user_id).update(map)
-                .addOnCompleteListener(task1 -> {
-                    if (task1.isSuccessful())
-                        Log.e(TAG, "addUserData: user data saved ");
-                    else
-                        Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
-                });
+        firestore.collection("Users").document(user_id)
+                .get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.e(TAG, "addUserData: data exists");
+                firestore.collection("Users").document(user_id).update(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                Log.e(TAG, "addUserData: user data saved ");
+                            else
+                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                        });
+            } else {
+                firestore.collection("Users").document(user_id).update(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                Log.e(TAG, "addUserData: user data saved ");
+                            else
+                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                        });
+            }
+        });
 
         HashMap<String, Object> map1 = new HashMap<>();
         map1.put("start", "on");

@@ -20,7 +20,9 @@ import com.foxfire.user.APICALL.APIInterface;
 import com.foxfire.user.APICALL.UserData.UserData;
 import com.foxfire.user.Utils.Utils;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 import butterknife.BindView;
@@ -68,8 +70,11 @@ public class LoginActivity extends AppCompatActivity {
 
     private void checkLogin() {
         boolean userFirstLogin = pref.getBoolean("login", false);  // getting boolean
-        if (userFirstLogin)
-            Utils.setIntent(this, MainActivity.class);
+        String user = pref.getString("user", "null");
+        String master = pref.getString("master", "null");
+        if (userFirstLogin) {
+            uploadData(user, master);
+        }
         Log.e(TAG, "checkLogin: login found in pref " + userFirstLogin);
     }
 
@@ -102,9 +107,9 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putBoolean("login", true);
                         editor.putString("passcode", passCode);
                         editor.putString("master", master_id);
-                        editor.putString("user", userIdLayout.getEditText().getText().toString());
+                        editor.putString("user", Objects.requireNonNull(userIdLayout.getEditText()).getText().toString());
                         editor.apply();
-                        Utils.setIntent(LoginActivity.this, MainActivity.class);
+                        uploadData(userIdLayout.getEditText().getText().toString(), master_id);
                     } else
                         Utils.showMessage(LoginActivity.this, "Device does not match with user");
                 } else
@@ -115,6 +120,38 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call<UserData> call, @NonNull Throwable t) {
                 Utils.showLog(TAG, "exception ", t.getMessage());
                 Utils.showMessage(LoginActivity.this, "Details did not match with server");
+            }
+        });
+    }
+
+    private void uploadData(String user_id, String master_id) {
+        Log.e(TAG, "uploadData: login uploadData ");
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("user_id", user_id);
+        map.put("master_id", master_id);
+        map.put("start", "on");
+        firestore.collection("Users").document(user_id)
+                .get().addOnCompleteListener(task -> {
+            if (task.getResult().exists()) {
+                Log.e(TAG, "loginUser: data exists");
+                firestore.collection("Users").document(user_id).update(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful()) {
+                                Log.e(TAG, "loginUser: user data saved ");
+                                Utils.setIntent(LoginActivity.this, MainActivity.class);
+                            } else
+                                Log.e(TAG, "loginUser: user data error " + Objects.requireNonNull(task1.getException()).getMessage());
+                        });
+            } else {
+                firestore.collection("Users").document(user_id).update(map)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful()) {
+                                Log.e(TAG, "loginUser: user data saved ");
+                                Utils.setIntent(LoginActivity.this, MainActivity.class);
+                            } else
+                                Log.e(TAG, "loginUser: user data error " + Objects.requireNonNull(task1.getException()).getMessage());
+                        });
             }
         });
     }
