@@ -240,6 +240,7 @@ public class MainActivity extends FragmentActivity
 
         addUserData();
         //addNotification();
+        //github.com/iRahulGaur
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
