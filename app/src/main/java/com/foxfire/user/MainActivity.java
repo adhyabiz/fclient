@@ -133,7 +133,7 @@ public class MainActivity extends FragmentActivity
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
                 map.put("msg", "user " + user_id + " is outside the fencing area at |");
-                map.put("master_id", "111");
+                map.put("master_id", master_id);
                 map.put("title", "Alert!! User Outside Fencing");
                 Log.e(TAG, "onReceive: after map");
                 if (!notificationSent) {
@@ -150,7 +150,7 @@ public class MainActivity extends FragmentActivity
                     HashMap<String, Object> map = new HashMap<>();
                     map.put("time", FieldValue.serverTimestamp());
                     map.put("msg", "user " + user_id + " is inside the fencing area at |");
-                    map.put("master_id", "111");
+                    map.put("master_id", master_id);
                     map.put("title", "Alert!! User Outside Fencing");
                     Log.e(TAG, "onReceive: after map");
                     if (!notificationSent) {
@@ -653,7 +653,7 @@ public class MainActivity extends FragmentActivity
         HashMap<String, Object> map = new HashMap<>();
         map.put("location", locations);
         map.put("time", FieldValue.serverTimestamp());
-        map.put("master_id", "111");
+        map.put("master_id", master_id);
         firestore.collection("Users").document(user_id).update(map)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful())
