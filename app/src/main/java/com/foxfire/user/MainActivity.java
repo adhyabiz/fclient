@@ -49,6 +49,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -93,6 +94,7 @@ public class MainActivity extends FragmentActivity
     private Marker mCurrLocationMarker;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
+    private  Circle circle;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_LOCATION_PERMISSION_CODE = 101;
@@ -108,6 +110,7 @@ public class MainActivity extends FragmentActivity
     private boolean notificationSent = false;
     private int moveSpeed = 0;
     private Location oldLocation, newLocation;
+    private String msgFromGeo;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -120,6 +123,7 @@ public class MainActivity extends FragmentActivity
             if (message.contains("outside")) {
                 Log.e(TAG, "onReceive: outside if");
                 Log.e(TAG, "onReceive: user id " + user_id);
+                msgFromGeo = message;
                 //outside the fencing
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("time", FieldValue.serverTimestamp());
@@ -133,6 +137,7 @@ public class MainActivity extends FragmentActivity
                 Log.e(TAG, "onReceive: after firebase");
             } else if (message.contains("inside")) {
                 if (!notificationSent) {
+                    msgFromGeo = message;
                     Log.e(TAG, "onReceive: inside if");
                     Log.e(TAG, "onReceive: user id " + user_id);
                     //outside the fencing
@@ -210,6 +215,21 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
+
+        if (msgFromGeo == null){
+            Log.e(TAG, "onCreate: user outside fencing");
+            addUserOutSide();
+        }
+
+    }
+
+    private void addUserOutSide() {
+        FirebaseFirestore firebase = FirebaseFirestore.getInstance();
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("geoFencing","outside");
+        firebase.collection("Users").document(user_id).update(map)
+                .addOnSuccessListener(aVoid -> Log.e(TAG, "addUserOutSide: user is outside " ))
+                .addOnFailureListener(e -> Log.e(TAG, "addUserOutSide: failed outside" ));
     }
 
     public static double getSpeed(Location currentLocation, Location oldLocation) {
@@ -235,7 +255,7 @@ public class MainActivity extends FragmentActivity
             double distance = Math.round(radius * c);
 
             double timeDifferent = currentLocation.getTime() - oldLocation.getTime();
-            return distance / timeDifferent;
+            return (distance / timeDifferent) * 1.6 ;
         }
     }
 
@@ -557,6 +577,7 @@ public class MainActivity extends FragmentActivity
             buildGoogleApiClient();
             map.setMyLocationEnabled(true);
         }
+
     }
 
     protected synchronized void buildGoogleApiClient() {
