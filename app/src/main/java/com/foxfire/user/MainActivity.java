@@ -259,7 +259,7 @@ public class MainActivity extends FragmentActivity
 
         if (msgFromGeo == null) {
             Log.e(TAG, "onCreate: user outside fencing");
-            addUserOutSide("outside");
+            addUserOutSide("spawn outside");
         } else {
             addUserOutSide("inside");
         }
