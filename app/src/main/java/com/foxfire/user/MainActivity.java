@@ -115,6 +115,7 @@ public class MainActivity extends FragmentActivity
     private int moveSpeed = 0;
     private Location oldLocation;
     private String msgFromGeo;
+    private boolean openingNotification = true;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -152,8 +153,9 @@ public class MainActivity extends FragmentActivity
                     map.put("master_id", "111");
                     map.put("title", "Alert!! User Outside Fencing");
                     Log.e(TAG, "onReceive: after map");
-                    firestoreFencingNotification(map, "inside");
-                    notificationSent = true;
+                    if (!notificationSent) {
+                        firestoreFencingNotification(map, "inside");
+                    }
                 }
             }
         }
@@ -271,7 +273,7 @@ public class MainActivity extends FragmentActivity
                     public void onResponse(@NonNull Call<MyResponse> call, @NonNull Response<MyResponse> response) {
                         try {
                             if (Objects.requireNonNull(response.body()).success == 1)
-                                Log.e(TAG, "onResponse: notification send");
+                                Log.e(TAG, "onResponse: notification send " + msg);
                             else
                                 Log.e(TAG, "onResponse: notification failed " + response.body().failure);
                         } catch (Exception e) {
@@ -725,11 +727,15 @@ public class MainActivity extends FragmentActivity
                 }
 
                 if (oldLocation != null) {
-                    if (!notificationSent) {
+                    Log.e(TAG, "startLocationMonitor: notification sent " + notificationSent);
+                    Log.e(TAG, "startLocationMonitor: opening notification " + openingNotification);
+                    if (openingNotification) {
                         if (msgFromGeo == null) {
                             Log.e(TAG, "onCreate: user outside fencing");
+                            openingNotification = false;
                             addUserOutSide("outside");
                         } else {
+                            openingNotification = false;
                             addUserOutSide("inside");
                         }
                     }
