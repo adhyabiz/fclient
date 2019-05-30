@@ -35,8 +35,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.foxfire.user.APICALL.APIClient;
 import com.foxfire.user.APICALL.APIInterface;
+import com.foxfire.user.APICALL.APINotiClient;
 import com.foxfire.user.Notification.Data;
 import com.foxfire.user.Notification.MyResponse;
 import com.foxfire.user.Notification.Notification;
@@ -55,7 +55,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -103,25 +102,19 @@ public class MainActivity extends FragmentActivity
     private GoogleApiClient mGoogleApiClient;
     private Marker mCurrLocationMarker;
     private MediaRecorder myAudioRecorder;
-    private String outputFile;
-    private Circle circle;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_LOCATION_PERMISSION_CODE = 101;
-    private GeofencingRequest geofencingRequest;
-    private boolean isMonitoring = false;
     private MarkerOptions markerOptions;
     private PendingIntent pendingIntent;
     private FirebaseFirestore firestore;
     private String user_id, master_id;
     private HashMap<String, Object> locations = new HashMap<>();
-    private SharedPreferences pref;
     private boolean updatedLocation = false;
     private boolean notificationSent = false;
     private int moveSpeed = 0;
-    private Location oldLocation, newLocation;
+    private Location oldLocation;
     private String msgFromGeo;
-    private APIInterface apiInterface;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -205,6 +198,16 @@ public class MainActivity extends FragmentActivity
                         firestore.collection("Users").document(user_id).update(map1)
                                 .addOnSuccessListener(aVoid1 -> Log.e(TAG, "firestoreFencingNotification: notification geo updated user document"))
                                 .addOnFailureListener(e -> Log.e(TAG, "firestoreFencingNotification: notification failed " + e.getMessage()));
+                        firestore.collection("Master").document(master_id).get()
+                                .addOnCompleteListener(task -> {
+                                    if (Objects.requireNonNull(task.getResult()).exists()) {
+                                        String token = task.getResult().getString("token");
+                                        String notiMsg = "User " + user_id + " is " + geo.toUpperCase();
+                                        sendNotification(token, notiMsg);
+                                    } else {
+                                        Log.e(TAG, "addUserOutSide: exception " + Objects.requireNonNull(task.getException()).getMessage());
+                                    }
+                                });
                     })
                     .addOnFailureListener(e -> Log.e(TAG, "onFailure: notification failed " + e.getMessage()));
         } catch (Exception e) {
@@ -227,7 +230,7 @@ public class MainActivity extends FragmentActivity
         firestore = FirebaseFirestore.getInstance();
         checkFirebase();
 
-        pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
         user_id = pref.getString("user", "null");  // getting user_id
         master_id = pref.getString("master", "111");  // getting master_id
 
@@ -269,7 +272,7 @@ public class MainActivity extends FragmentActivity
         Notification notification = new Notification("" + msg, "Alert!!", "android.intent.action.MAIN");
         Sender sender = new Sender(notification, token, data);
         Log.e(TAG, "sendNotification: sender token " + token);
-        apiInterface = APIClient.getClient().create(APIInterface.class);
+        APIInterface apiInterface = APINotiClient.getNotiClient().create(APIInterface.class);
         apiInterface.sendNotification(sender)
                 .enqueue(new Callback<MyResponse>() {
                     @Override
@@ -280,7 +283,7 @@ public class MainActivity extends FragmentActivity
                             else
                                 Log.e(TAG, "onResponse: notification failed " + response.body().failure);
                         } catch (Exception e) {
-                            Log.e(TAG, "onResponse: exception " + e.getMessage());
+                            Log.e(TAG, "onResponse: notification exception " + e.getMessage());
                         }
                     }
 
@@ -290,7 +293,7 @@ public class MainActivity extends FragmentActivity
                             Log.e(TAG, "onFailure: notification failed " + t.getMessage());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            Log.e(TAG, "onFailure: exception " + e.getMessage());
+                            Log.e(TAG, "onFailure: notification exception " + e.getMessage());
                         }
                     }
                 });
@@ -306,12 +309,12 @@ public class MainActivity extends FragmentActivity
 
         firebase.collection("Master").document(master_id).get()
                 .addOnCompleteListener(task -> {
-                    if (task.getResult().exists()) {
+                    if (Objects.requireNonNull(task.getResult()).exists()) {
                         String token = task.getResult().getString("token");
-                        String notiMsg = "User " + user_id + " is " + msg.toUpperCase();
+                        String notiMsg = "User " + user_id + " is " + msg.toUpperCase() + " Fencing area";
                         sendNotification(token, notiMsg);
                     } else {
-                        Log.e(TAG, "addUserOutSide: exception " + task.getException().getMessage());
+                        Log.e(TAG, "addUserOutSide: exception " + Objects.requireNonNull(task.getException()).getMessage());
                     }
                 });
     }
@@ -321,7 +324,7 @@ public class MainActivity extends FragmentActivity
         connectedRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                boolean connected = snapshot.getValue(Boolean.class);
+                boolean connected = Objects.requireNonNull(snapshot.getValue(Boolean.class));
                 if (connected) {
                     Log.d(TAG, "connected");
                 } else {
@@ -353,7 +356,7 @@ public class MainActivity extends FragmentActivity
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Address address = addressList.get(0);
+                Address address = Objects.requireNonNull(addressList).get(0);
                 LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
                 map.addMarker(new MarkerOptions().position(latLng).title("Marker"));
                 map.animateCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -366,10 +369,7 @@ public class MainActivity extends FragmentActivity
 
 
     private void addNotification() {
-
         //click Notification on Maps
-        // TODO: 16/5/19 do Notification
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setContentTitle("Notification Example")
@@ -383,13 +383,10 @@ public class MainActivity extends FragmentActivity
 
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(0, builder.build());
-
-
     }
 
     private void screenShot() {
         //click screenshot of the app
-        // TODO: 15/5/19 do screenshot
         Bitmap bitmap = takeScreenshot();
         saveBitmap(bitmap);
     }
@@ -429,7 +426,7 @@ public class MainActivity extends FragmentActivity
                             if (task1.isSuccessful())
                                 Log.e(TAG, "addUserData: user data saved ");
                             else
-                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                                Log.e(TAG, "addUserData: user data error " + Objects.requireNonNull(task1.getException()).getMessage());
                         });
             } else {
                 firestore.collection("Users").document(user_id).update(map)
@@ -437,7 +434,7 @@ public class MainActivity extends FragmentActivity
                             if (task1.isSuccessful())
                                 Log.e(TAG, "addUserData: user data saved ");
                             else
-                                Log.e(TAG, "addUserData: user data error " + task1.getException().getMessage());
+                                Log.e(TAG, "addUserData: user data error " + Objects.requireNonNull(task1.getException()).getMessage());
                         });
             }
         });
@@ -470,7 +467,7 @@ public class MainActivity extends FragmentActivity
         return new Geofence.Builder()
                 .setRequestId(Constant.GEOFENCE_ID_STAN_UNI)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setCircularRegion(latLng.latitude, latLng.longitude, Constant.GEOFENCE_RADIUS_IN_METERS)
+                .setCircularRegion(Objects.requireNonNull(latLng).latitude, latLng.longitude, Constant.GEOFENCE_RADIUS_IN_METERS)
                 .setNotificationResponsiveness(1000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build();
@@ -485,7 +482,6 @@ public class MainActivity extends FragmentActivity
                     else
                         Log.d(TAG, "Not stop geofencing");
                 });
-        isMonitoring = false;
         invalidateOptionsMenu();
     }
 
@@ -527,7 +523,7 @@ public class MainActivity extends FragmentActivity
     private void startGeofencing() {
         Log.d(TAG, "Start geofencing monitoring call");
         pendingIntent = getGeofencePendingIntent();
-        geofencingRequest = new GeofencingRequest.Builder()
+        GeofencingRequest geofencingRequest = new GeofencingRequest.Builder()
                 .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .addGeofence(getGeofence())
                 .build();
@@ -548,7 +544,6 @@ public class MainActivity extends FragmentActivity
                 Log.d(TAG, e.getMessage());
             }
         }
-        isMonitoring = true;
         invalidateOptionsMenu();
     }
 
@@ -561,7 +556,7 @@ public class MainActivity extends FragmentActivity
     }
 
     private void audioRecoding() {
-        outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
+        String outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
         myAudioRecorder = new MediaRecorder();
         myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -648,7 +643,7 @@ public class MainActivity extends FragmentActivity
 
     private void locationGeofencing() {
         LatLng latLng = Constant.AREA_LANDMARKS.get(Constant.GEOFENCE_ID_STAN_UNI);
-        map.addMarker(new MarkerOptions().position(latLng).title("New Delhi"));
+        map.addMarker(new MarkerOptions().position(Objects.requireNonNull(latLng)).title("New Delhi"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
 
         map.addCircle(new CircleOptions()
@@ -669,7 +664,7 @@ public class MainActivity extends FragmentActivity
                     if (task.isSuccessful())
                         Log.e(TAG, "addUserData: user data saved ");
                     else
-                        Log.e(TAG, "addUserData: user data error " + task.getException().getMessage());
+                        Log.e(TAG, "addUserData: user data error " + Objects.requireNonNull(task.getException()).getMessage());
                 });
     }
 
@@ -807,7 +802,6 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         //Edit.........
-        isMonitoring = false;
         Log.e(TAG, "Connection Failed:" + connectionResult.getErrorMessage());
 
     }

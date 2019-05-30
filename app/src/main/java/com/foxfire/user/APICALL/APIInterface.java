@@ -21,7 +21,7 @@ public interface APIInterface {
     @NonNull
     @Headers({
             "Content-Type:application/json",
-            "Authorization:key=AAAAfOQNgiw:APA91bGlGALlqEMWF4G34NtZqM2N2jXr5xkOmhClCqSrfPXZ3KaLUOW3OSQTqGRGhtA5_zdOt3EahE4hH00WL-bRcFaSS7B7FGwiO4IPiADFTuty9FgFrdT_Jdia68DwINLXMKpqZuAj"
+            "Authorization:key=AAAAfOQNgiw:APA91bFa8RP6NfChcC4NSS8M7TkUqkB2j9cIcTkibWn638mg2biaUcIEdi94r4Y4_MY18EZF4Q-e9bXMU9y58tJrkvVU8w-1t5Ml78FXjwUkboJfee42GFM-ATwvst7lxUVd6lar6gjI"
     })
     @POST("fcm/send")
     retrofit2.Call<MyResponse> sendNotification(@Body Sender body);
