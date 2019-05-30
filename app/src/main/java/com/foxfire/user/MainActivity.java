@@ -256,14 +256,6 @@ public class MainActivity extends FragmentActivity
             if (!hasFocus)
                 searchET.setVisibility(View.GONE);
         });
-
-        if (msgFromGeo == null) {
-            Log.e(TAG, "onCreate: user outside fencing");
-            addUserOutSide("spawn outside");
-        } else {
-            addUserOutSide("inside");
-        }
-
     }
 
     private void sendNotification(String token, String msg) {
@@ -719,6 +711,7 @@ public class MainActivity extends FragmentActivity
     @SuppressLint("SetTextI18n")
     private void startLocationMonitor() {
         //Edit.........
+
         Log.d(TAG, "start location monitor");
         LocationRequest locationRequest = LocationRequest.create()
                 .setInterval(2000)
@@ -732,6 +725,14 @@ public class MainActivity extends FragmentActivity
                 }
 
                 if (oldLocation != null) {
+                    if (!notificationSent) {
+                        if (msgFromGeo == null) {
+                            Log.e(TAG, "onCreate: user outside fencing");
+                            addUserOutSide("outside");
+                        } else {
+                            addUserOutSide("inside");
+                        }
+                    }
                     Log.e(TAG, "startLocationMonitor: inside oldLocation!=null ");
                     moveSpeed = 0;
                     moveSpeed = (int) getSpeed(location, oldLocation);
