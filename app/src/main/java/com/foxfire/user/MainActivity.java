@@ -94,7 +94,7 @@ public class MainActivity extends FragmentActivity
     private Marker mCurrLocationMarker;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
-    private  Circle circle;
+    private Circle circle;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_LOCATION_PERMISSION_CODE = 101;
@@ -117,8 +117,8 @@ public class MainActivity extends FragmentActivity
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
             String message = intent.getStringExtra("Status");
-            Toast.makeText(context, "msg " + message, Toast.LENGTH_SHORT).show();
             Log.e(TAG, "onReceive: msg from GeoService " + message);
+            Log.e(TAG, "onReceive: notificationSent " + notificationSent);
 
             if (message.contains("outside")) {
                 Log.e(TAG, "onReceive: outside if");
@@ -133,6 +133,7 @@ public class MainActivity extends FragmentActivity
                 Log.e(TAG, "onReceive: after map");
                 if (!notificationSent) {
                     firestoreFencingNotification(map, "outside");
+                    notificationSent = true;
                 }
                 Log.e(TAG, "onReceive: after firebase");
             } else if (message.contains("inside")) {
@@ -148,10 +149,38 @@ public class MainActivity extends FragmentActivity
                     map.put("title", "Alert!! User Outside Fencing");
                     Log.e(TAG, "onReceive: after map");
                     firestoreFencingNotification(map, "inside");
+                    notificationSent = true;
                 }
             }
         }
     };
+
+    public static double getSpeed(Location currentLocation, Location oldLocation) {
+        //  Click Speed of maps
+        //TODO: 16/5/19 do Notification
+
+        double newLat = currentLocation.getLatitude();
+        double newLon = currentLocation.getLongitude();
+
+        double oldLat = oldLocation.getLatitude();
+        double oldLon = oldLocation.getLongitude();
+
+        if (currentLocation.hasSpeed()) {
+            return currentLocation.getSpeed();
+        } else {
+            double radius = 6371000;
+            double dLat = Math.toRadians(newLat - oldLat);
+            double dLon = Math.toRadians(newLon - oldLon);
+            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(Math.toRadians(newLat)) * Math.cos(Math.toRadians(oldLat)) *
+                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            double c = 2 * Math.asin(Math.sqrt(a));
+            double distance = Math.round(radius * c);
+
+            double timeDifferent = currentLocation.getTime() - oldLocation.getTime();
+            return (distance / timeDifferent) * 1.6;
+        }
+    }
 
     private void firestoreFencingNotification(HashMap<String, Object> map, String geo) {
         Log.e(TAG, "firestoreFencingNotification: inside notification");
@@ -159,14 +188,12 @@ public class MainActivity extends FragmentActivity
             Log.e(TAG, "firestoreFencingNotification: inside notification try");
             firestore.collection("Users").document(user_id).collection("Notification").document().set(map)
                     .addOnSuccessListener(aVoid -> {
-                        Log.e(TAG, "firebase: data send");
+                        Log.e(TAG, "firebase: notification data send");
                         HashMap<String, Object> map1 = new HashMap<>();
                         map1.put("geoFencing", geo);
                         firestore.collection("Users").document(user_id).update(map1)
-                                .addOnSuccessListener(aVoid1 -> {
-                                    Log.e(TAG, "firestoreFencingNotification: updated user document");
-                                    notificationSent = true;
-                                }).addOnFailureListener(e -> Log.e(TAG, "firestoreFencingNotification: failed " + e.getMessage()));
+                                .addOnSuccessListener(aVoid1 -> Log.e(TAG, "firestoreFencingNotification: notification geo updated user document"))
+                                .addOnFailureListener(e -> Log.e(TAG, "firestoreFencingNotification: notification failed " + e.getMessage()));
                     })
                     .addOnFailureListener(e -> Log.e(TAG, "onFailure: notification failed " + e.getMessage()));
         } catch (Exception e) {
@@ -216,47 +243,22 @@ public class MainActivity extends FragmentActivity
                 searchET.setVisibility(View.GONE);
         });
 
-        if (msgFromGeo == null){
+        if (msgFromGeo == null) {
             Log.e(TAG, "onCreate: user outside fencing");
-            addUserOutSide();
+            addUserOutSide("outside");
+        } else {
+            addUserOutSide("inside");
         }
 
     }
 
-    private void addUserOutSide() {
+    private void addUserOutSide(String msg) {
         FirebaseFirestore firebase = FirebaseFirestore.getInstance();
         HashMap<String, Object> map = new HashMap<>();
-        map.put("geoFencing","outside");
+        map.put("geoFencing", msg);
         firebase.collection("Users").document(user_id).update(map)
-                .addOnSuccessListener(aVoid -> Log.e(TAG, "addUserOutSide: user is outside " ))
-                .addOnFailureListener(e -> Log.e(TAG, "addUserOutSide: failed outside" ));
-    }
-
-    public static double getSpeed(Location currentLocation, Location oldLocation) {
-        //  Click Speed of maps
-        //TODO: 16/5/19 do Notification
-
-        double newLat = currentLocation.getLatitude();
-        double newLon = currentLocation.getLongitude();
-
-        double oldLat = oldLocation.getLatitude();
-        double oldLon = oldLocation.getLongitude();
-
-        if (currentLocation.hasSpeed()) {
-            return currentLocation.getSpeed();
-        } else {
-            double radius = 6371000;
-            double dLat = Math.toRadians(newLat - oldLat);
-            double dLon = Math.toRadians(newLon - oldLon);
-            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(Math.toRadians(newLat)) * Math.cos(Math.toRadians(oldLat)) *
-                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            double c = 2 * Math.asin(Math.sqrt(a));
-            double distance = Math.round(radius * c);
-
-            double timeDifferent = currentLocation.getTime() - oldLocation.getTime();
-            return (distance / timeDifferent) * 1.6 ;
-        }
+                .addOnSuccessListener(aVoid -> Log.e(TAG, "addUserOutSide: user is outside "))
+                .addOnFailureListener(e -> Log.e(TAG, "addUserOutSide: failed outside"));
     }
 
     private void checkFirebase() {

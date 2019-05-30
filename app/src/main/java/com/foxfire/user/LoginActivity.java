@@ -158,7 +158,9 @@ public class LoginActivity extends AppCompatActivity {
                                 Log.e(TAG, "loginUser: user data error " + Objects.requireNonNull(task1.getException()).getMessage());
                         });
             }
-        });
+            Utils.setIntent(LoginActivity.this, MainActivity.class);
+        }).addOnFailureListener(e -> Log.e(TAG, "uploadData: failed " + e.getMessage()));
+        Utils.setIntent(LoginActivity.this, MainActivity.class);
     }
 
     @OnClick(R.id.changePassBtn)
