@@ -35,6 +35,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.foxfire.user.APICALL.APIInterface;
+import com.foxfire.user.Notification.Data;
+import com.foxfire.user.Notification.MyResponse;
+import com.foxfire.user.Notification.Notification;
+import com.foxfire.user.Notification.Sender;
 import com.foxfire.user.Utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -68,10 +73,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends FragmentActivity
         implements OnMapReadyCallback,
@@ -111,6 +120,7 @@ public class MainActivity extends FragmentActivity
     private int moveSpeed = 0;
     private Location oldLocation, newLocation;
     private String msgFromGeo;
+    private APIInterface apiInterface;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -252,6 +262,38 @@ public class MainActivity extends FragmentActivity
 
     }
 
+    private void sendNotification(String token, String msg) {
+        Log.e(TAG, "sendNotification: inside sendNotification");
+        Data data = new Data(user_id, "no", "no");
+        Notification notification = new Notification("" + msg, "Alert!!", "android.intent.action.MAIN");
+        Sender sender = new Sender(notification, token, data);
+        Log.e(TAG, "sendNotification: sender token " + token);
+        apiInterface.sendNotification(sender)
+                .enqueue(new Callback<MyResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<MyResponse> call, @NonNull Response<MyResponse> response) {
+                        try {
+                            if (Objects.requireNonNull(response.body()).success == 1)
+                                Log.e(TAG, "onResponse: notification send");
+                            else
+                                Log.e(TAG, "onResponse: notification failed " + response.body().failure);
+                        } catch (Exception e) {
+                            Log.e(TAG, "onResponse: exception " + e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<MyResponse> call, @NonNull Throwable t) {
+                        try {
+                            Log.e(TAG, "onFailure: notification failed " + t.getMessage());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "onFailure: exception " + e.getMessage());
+                        }
+                    }
+                });
+    }
+
     private void addUserOutSide(String msg) {
         FirebaseFirestore firebase = FirebaseFirestore.getInstance();
         HashMap<String, Object> map = new HashMap<>();
@@ -259,6 +301,17 @@ public class MainActivity extends FragmentActivity
         firebase.collection("Users").document(user_id).update(map)
                 .addOnSuccessListener(aVoid -> Log.e(TAG, "addUserOutSide: user is outside "))
                 .addOnFailureListener(e -> Log.e(TAG, "addUserOutSide: failed outside"));
+
+        firebase.collection("Master").document(master_id).get()
+                .addOnCompleteListener(task -> {
+                    if (task.getResult().exists()) {
+                        String token = task.getResult().getString("token");
+                        String notiMsg = "User " + user_id + " is " + msg.toUpperCase();
+                        sendNotification(token, notiMsg);
+                    } else {
+                        Log.e(TAG, "addUserOutSide: exception " + task.getException().getMessage());
+                    }
+                });
     }
 
     private void checkFirebase() {
