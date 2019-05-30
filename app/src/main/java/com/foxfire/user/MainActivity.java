@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.foxfire.user.APICALL.APIClient;
 import com.foxfire.user.APICALL.APIInterface;
 import com.foxfire.user.Notification.Data;
 import com.foxfire.user.Notification.MyResponse;
@@ -268,6 +269,7 @@ public class MainActivity extends FragmentActivity
         Notification notification = new Notification("" + msg, "Alert!!", "android.intent.action.MAIN");
         Sender sender = new Sender(notification, token, data);
         Log.e(TAG, "sendNotification: sender token " + token);
+        apiInterface = APIClient.getClient().create(APIInterface.class);
         apiInterface.sendNotification(sender)
                 .enqueue(new Callback<MyResponse>() {
                     @Override
